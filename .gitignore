@@ -1,0 +1,8 @@
+frontend/webpack
+frontend/static
+.env
+
+venv/
+env/
+
+__pycache__/
