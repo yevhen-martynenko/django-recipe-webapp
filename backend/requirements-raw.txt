@@ -1,0 +1,7 @@
+# prod
+Django
+django-environ
+djangorestframework
+
+# dev
+requests
