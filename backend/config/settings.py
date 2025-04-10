@@ -22,6 +22,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 INSTALLED_APPS = [
     # local
+    'apps.users',
 
     # default
     'django.contrib.admin',
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # third-party
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
