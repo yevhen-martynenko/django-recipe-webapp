@@ -6,6 +6,16 @@
 *.pyc
 local_settings.py
 
+# Frontend
+static/
+templates/
+staticfiles/
+
+# Static files
+media/
+staticfiles/
+collectstatic/
+
 # Environment files
 .env
 .env.*
@@ -31,11 +41,6 @@ env/
 # Logs
 *.log
 logs/
-
-# Static files
-media/
-staticfiles/
-collectstatic/
 
 # IDE & Editors
 .vim_session

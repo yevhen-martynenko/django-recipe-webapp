@@ -12,7 +12,6 @@ environ.Env.read_env(env_file_path)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Use environment variables
 DEBUG = env.bool('DEBUG', default=False)
 SECRET_KEY = env('SECRET_KEY', default='default-secret-key')
@@ -22,6 +21,8 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 INSTALLED_APPS = [
     # local
+    'apps.core',
+    'apps.users',
 
     # default
     'django.contrib.admin',
@@ -32,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # third-party
+    'rest_framework',
+    'manifest_loader',
 ]
 
 MIDDLEWARE = [
@@ -49,10 +52,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -112,3 +121,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom
 AUTH_USER_MODEL = "users.User"
+
+
+MANIFEST_LOADER = {
+    'manifest_file': os.path.join(BASE_DIR, 'static/manifest.json'),
+}
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
