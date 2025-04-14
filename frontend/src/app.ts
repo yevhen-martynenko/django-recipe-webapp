@@ -1,9 +1,8 @@
-import { run } from "@utils/util.ts";
+// import { run } from "@utils/util.ts";
 import "@styles/main.scss";
 // import images from "./assets/images/*.png";
 
 console.log("app.ts code");
-run();
 
 
 if (__MODE__ === "development") {
