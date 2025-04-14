@@ -1,0 +1,102 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+
+
+{% block content %}
+<main class="auth">
+  <section class="auth__visual">
+    <header class="auth__brand">
+      <h1 class="auth__logo">SiteName:TODO</h1>
+    </header>
+  </section>
+
+  <section class="auth__panel" aria-labelledby="auth-tabs">
+    <div class="auth__panel-inner">
+
+      <!-- Tabs: Login / Sign Up -->
+      <div class="auth__tabs" role="tablist" aria-label="Authentication Tabs" id="auth-tabs">
+        <button id="tab-login" class="auth__tab auth__tab--active" role="tab" aria-selected="true" aria-controls="panel-login">Login</button>
+        <button id="tab-signup" class="auth__tab" role="tab" aria-selected="false" aria-controls="panel-signup">Sign Up</button>
+      </div>
+
+      <!-- Login Panel -->
+      <div id="panel-login" class="auth__form-panel" role="tabpanel" aria-labelledby="tab-login">
+        <h2 class="auth__title">TODO: Welcome Back</h2>
+        <p class="auth__subtitle">TODO: Log in to access your favorite recipes</p>
+
+        <button class="auth__google-btn" aria-label="Continue with Google">
+          <span class="auth__google-icon">G</span> Continue with Google
+        </button>
+
+        <div class="auth__divider" role="separator" aria-hidden="true">
+          <span class="auth__divider-text">Or continue with</span>
+        </div>
+
+        <form class="auth__form" method="POST" action="/login">
+          <label for="login-email" class="auth__label">Email address or username</label>
+          <input type="email" id="login-email" class="auth__input" name="email" required />
+
+          <label for="login-password" class="auth__label">Password</label>
+          <input type="password" id="login-password" class="auth__input" name="password" required />
+
+          <div class="auth__options">
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input" name="remember">
+              <span class="checkbox__visual"></span>
+              <span class="checkbox__label">Remember me</span>
+            </label>
+            <a href="/forgot-password" class="auth__link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn--primary">Log In</button>
+        </form>
+      </div>
+
+      <!-- Sign Up Panel -->
+      <div id="panel-signup" class="auth__form-panel auth__form-panel--hidden" role="tabpanel" aria-labelledby="tab-signup" style="display: none;">
+        <h2 class="auth__title">TODO: Welcome to CulinaryConnect</h2>
+        <p class="auth__subtitle">TODO: Join our community of food enthusiasts</p>
+
+        <button class="auth__google-btn" aria-label="Continue with Google">
+          <span class="auth__google-icon"></span>
+          Continue with Google
+        </button>
+
+        <div class="auth__divider" role="separator" aria-hidden="true">
+          <span class="auth__divider-text">Or continue with</span>
+        </div>
+
+        <form class="auth__form" method="POST" action="/signup">
+            <label for="signup-email" class="auth__label">Email address<span class="required">*</span></label>
+          <input type="email" id="signup-email" class="auth__input" name="email" required />
+
+          <label for="signup-username" class="auth__label">Username</label>
+          <input type="text" id="signup-username" class="auth__input" name="username" required />
+
+          <label for="signup-password" class="auth__label">Password<span class="required">*</span></label>
+          <input type="password" id="signup-password" class="auth__input" name="password" required />
+
+          <div class="auth__options">
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input" name="remember">
+              <span class="checkbox__visual"></span>
+              <span class="checkbox__label">Remember me</span>
+            </label>
+            <a href="/forgot-password" class="auth__link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn--primary">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'registration.js' %}"></script>
+{% endblock page_scripts %}
