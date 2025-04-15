@@ -35,23 +35,23 @@
           <span class="auth__divider-text">Or continue with</span>
         </div>
 
-        <form class="auth__form" method="POST" action="/login">
-          <label for="login-email" class="auth__label">Email address or username</label>
-          <input type="email" id="login-email" class="auth__input" name="email" required />
+        <form class="form auth__form" method="POST" action="/login">
+          <label for="login-email" class="form__label auth__form-label">Email address or username</label>
+          <input type="email" id="login-email" class="form__input auth__form-input" name="email" required />
 
-          <label for="login-password" class="auth__label">Password</label>
-          <input type="password" id="login-password" class="auth__input" name="password" required />
+          <label for="login-password" class="form__label auth__form-label">Password</label>
+          <input type="password" id="login-password" class="form__input auth__form-input" name="password" required />
 
-          <div class="auth__options">
+          <div class="form__options auth__form-options">
             <label class="checkbox">
               <input type="checkbox" class="checkbox__input" name="remember">
               <span class="checkbox__visual"></span>
               <span class="checkbox__label">Remember me</span>
             </label>
-            <a href="/forgot-password" class="auth__link">Forgot password?</a>
+            <a href="/forgot-password" class="form__link auth__form-link">Forgot password?</a>
           </div>
 
-          <button type="submit" class="btn--primary">Log In</button>
+          <button type="submit" class="btn">Log In</button>
         </form>
       </div>
 
@@ -69,26 +69,26 @@
           <span class="auth__divider-text">Or continue with</span>
         </div>
 
-        <form class="auth__form" method="POST" action="/signup">
-            <label for="signup-email" class="auth__label">Email address<span class="required">*</span></label>
-          <input type="email" id="signup-email" class="auth__input" name="email" required />
+        <form class="form auth__form" method="POST" action="/signup">
+          <label for="signup-email" class="form__label auth__form-label">Email address<span class="required">*</span></label>
+          <input type="email" id="signup-email" class="form__input auth__form-input" name="email" required />
 
-          <label for="signup-username" class="auth__label">Username</label>
-          <input type="text" id="signup-username" class="auth__input" name="username" required />
+          <label for="signup-username" class="form__label auth__form-label">Username</label>
+          <input type="text" id="signup-username" class="form__input auth__form-input" name="username" required />
 
-          <label for="signup-password" class="auth__label">Password<span class="required">*</span></label>
-          <input type="password" id="signup-password" class="auth__input" name="password" required />
+          <label for="signup-password" class="form__label auth__form-label">Password<span class="required">*</span></label>
+          <input type="password" id="signup-password" class="form__input auth__form-input" name="password" required />
 
-          <div class="auth__options">
+          <div class="form__options auth__form-options">
             <label class="checkbox">
               <input type="checkbox" class="checkbox__input" name="remember">
               <span class="checkbox__visual"></span>
               <span class="checkbox__label">Remember me</span>
             </label>
-            <a href="/forgot-password" class="auth__link">Forgot password?</a>
+            <a href="/forgot-password" class="form__link auth__form-link">Forgot password?</a>
           </div>
 
-          <button type="submit" class="btn--primary">Create Account</button>
+          <button type="submit" class="btn">Create Account</button>
         </form>
       </div>
     </div>
@@ -98,5 +98,5 @@
 
 
 {% block page_scripts %}
-<script defer src="{% asset_tags 'registration.js' %}"></script>
+<script defer src="{% asset_tags 'auth.js' %}"></script>
 {% endblock page_scripts %}

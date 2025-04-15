@@ -1,5 +1,5 @@
 import "@styles/main.scss";
-import "@styles/pages/registration.scss";
+import "@styles/pages/auth.scss";
 
 
 document.addEventListener("DOMContentLoaded", () => {

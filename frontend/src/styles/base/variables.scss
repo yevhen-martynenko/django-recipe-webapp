@@ -1,0 +1,39 @@
+// ----------------------------------------------
+// Colors
+// ----------------------------------------------
+$color-primary: #88c100;  // #01c176
+$color-secondary: #fef8f3;
+$color-placeholder: #aaa;
+$color-text: #333;
+$color-muted: #777;
+$color-border: #ddd;
+$color-accent: #f1f1f1;
+$color-white: #fff;
+
+$color-error: #f44336;
+$color-success: #4caf50;
+$color-danger: #f44336;
+
+
+// ----------------------------------------------
+// Fonts
+// ----------------------------------------------
+$font-body: 'Inter', sans-serif;
+$font-heading: 'Libre Baskerville', serif;
+
+
+// ----------------------------------------------
+// Breakpoints
+// ----------------------------------------------
+$breakpoint-xs: 480px;     // Mobile Small
+$breakpoint-sm: 768px;     // Tablet
+$breakpoint-md: 1024px;    // Laptop
+$breakpoint-lg: 1280px;    // Desktop
+$breakpoint-xl: 1536px;    // XL Desktop
+
+
+// ----------------------------------------------
+// Misc
+// ----------------------------------------------
+$radius: 8px;
+$transition: 0.3s ease;
