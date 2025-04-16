@@ -1,0 +1,71 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% asset_tags 'coming_soon.css' %}">
+{% endblock page_styles %}
+
+
+{% block content %}
+<main class="coming-soon">
+  <div class="coming-soon__overlay"></div>
+  <section class="coming-soon__container">
+    <h1 class="coming-soon__title">Coming Soon</h1>
+    <p class="coming-soon__subtitle">TODO:We're working hard to bring you something amazing. Stay tuned!</p>
+
+    <div
+      class="coming-soon__countdown"
+      id="countdown"
+      data-future-time="{{ future_time }}"
+      role="timer"
+      aria-live="polite"
+    >
+      <div class="coming-soon__time">
+        <span class="coming-soon__number" id="days">1000</span>
+        <span class="coming-soon__label">Days</span>
+      </div>
+      <div class="coming-soon__time">
+        <span class="coming-soon__number" id="hours">0</span>
+        <span class="coming-soon__label">Hours</span>
+      </div>
+      <div class="coming-soon__time">
+        <span class="coming-soon__number" id="minutes">0</span>
+        <span class="coming-soon__label">Minutes</span>
+      </div>
+      <div class="coming-soon__time">
+        <span class="coming-soon__number" id="seconds">0</span>
+        <span class="coming-soon__label">Seconds</span>
+      </div>
+    </div>
+
+    <form class="form coming-soon__form" aria-label="Notify me form">
+      <label for="email" class="form__label coming-soon__form-label">Enter your email</label>
+      <input 
+        type="email" 
+        id="email" 
+        name="email" 
+        class="form__input" 
+        placeholder="Enter your email" 
+        required 
+        aria-required="true" 
+      />
+      <button type="submit" class="btn coming-soon__form-btn">Notify Me</button>
+    </form>
+
+    <nav class="coming-soon__social" aria-label="Social media links">
+      <ul class="coming-soon__social-list">
+        {% for platform, url in social_media_urls %}
+          <li><a href="{{ url }}" target="_blank" aria-label="{{ platform }}" class="coming-soon__social-link"><!-- {{ platform }} Icon --></a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+  </section>
+</main>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'coming_soon.js' %}"></script>
+{% endblock page_scripts %}
