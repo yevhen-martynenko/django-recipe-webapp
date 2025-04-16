@@ -3,10 +3,10 @@
 {% load asset_tags %}
 
 <head>
-    <title>{% block title %}{% endblock title %}</title>
+    <title>{% block title %}TODO: Site{% endblock title %}</title>
     <link rel="icon" href="{% asset_tags 'favicon.ico' %}">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0">
+    {% include "partials/head.html" %}
+    {% block page_styles %}{% endblock page_styles %}
 </head>
 
 <body>
