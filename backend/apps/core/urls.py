@@ -2,23 +2,23 @@ from django.urls import path
 from django.conf.urls.static import static
 from django.conf import settings
 from .views import (
+    main_view,
     user_auth_view,
     coming_soon_view,
 )
 
 
 urlpatterns = [
+    # Main
+    path('', main_view, name='main'),
+
     # Auth
     path('auth/', user_auth_view, name='user-auth'),
-    # TODO: path('logout/', user_logout_view, name='user-logout'),
-    path('logout/', coming_soon_view, name='user-logout'),
-    # TODO: path('password-reset/', password_reset_request_view, name='password-reset'),
-    path('password-reset/', coming_soon_view, name='password-reset'),
-    # TODO: path('password-reset-confirm/<uidb64>/<token>/', password_reset_confirm_view, name='password-reset-confirm'),
-    path('password-reset-confirm/<uidb64>/<token>/', coming_soon_view, name='password-reset-confirm'),
+    path('auth/logout/', coming_soon_view, name='user-logout'),
+    path('auth/password-reset/', coming_soon_view, name='password-reset'),
+    path('auth/password-reset-confirm/<uidb64>/<token>/', coming_soon_view, name='password-reset-confirm'),
 
     # User
-    # TODO: path('user/', user_detail_view, name='user-detail'),
     path('user/', coming_soon_view, name='user-detail'),
 
     # Recipes

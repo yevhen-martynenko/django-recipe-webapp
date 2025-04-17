@@ -35,11 +35,20 @@ class ComingSoonView(TemplateView):
 
         target_time = datetime(2026, 1, 1, 0, 0, 0)
         aware_time = make_aware(target_time)
+        social_media_urls = (
+            # ('X', 'https://x.com'),
+            ('Instagram', 'https://www.instagram.com'),
+            ('Facebook', 'https://www.facebook.com'),
+            ('LinkedIn', 'https://www.linkedin.com'),
+            ('Pinterest', 'https://www.pinterest.com'),
+            ('Reddit', 'https://www.reddit.com'),
+        )
 
         context.update({
             "title": "Coming soon",
             "is_partials": True,
             "future_time": aware_time.isoformat(),
+            "social_media_urls": social_media_urls
         })
         return context
 
