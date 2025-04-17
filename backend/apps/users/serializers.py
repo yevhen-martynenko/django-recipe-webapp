@@ -86,3 +86,46 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'last_login',
             'is_banned'
         ]
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+    )
+    password2 = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ['email', 'username', 'password', 'password2']
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': True},
+        }
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({'password': 'Password fields didn\'t match.'})
+
+        if User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError({'email': 'Email already exists'})
+        
+        if User.objects.filter(username=attrs['username']).exists():
+            raise serializers.ValidationError({'username': 'Username already exists'})
+        
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password2')
+
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            password=validated_data['password'],
+            description='',
+            avatar='',
+        )
+        return user
