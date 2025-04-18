@@ -1,3 +1,5 @@
+import random
+
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 
@@ -5,56 +7,21 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        validators=[validate_password]
-    )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True
-    )
-
     class Meta:
         model = User
         fields = [
             'email',
             'username',
-            'password',
-            'password2',
             'description',
-            'avatar'
+            'avatar',
+            'date_joined',
+            'last_login',
+            'is_active',
+            'is_staff',
+            'is_superuser',
+            'is_banned',
+
         ]
-        extra_kwargs = {
-            'description': {'required': False, 'allow_blank': True},
-            'avatar': {'required': False},
-        }
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-
-        if User.objects.filter(email=attrs['email']).exists():
-            raise serializers.ValidationError({"email": "Email already exists"})
-
-        if User.objects.filter(username=attrs['username']).exists():
-            raise serializers.ValidationError({"username": "Username already exists"})
-
-        if not attrs.get('description'):
-            attrs['description'] = ''
-
-        return attrs
-
-    def create(self, validated_data):
-        validated_data.pop('password2')
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password'],
-            description=validated_data.get('description', ''),
-            avatar=validated_data.get('avatar')
-        )
-        return user
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -94,36 +61,42 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         required=True,
         validators=[validate_password],
     )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True,
-    )
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'password2']
+        fields = ['email', 'username', 'password']
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},
         }
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({'password': 'Password fields didn\'t match.'})
+        email = attrs.get('email')
+        username = attrs.get('username', '')
 
-        if User.objects.filter(email=attrs['email']).exists():
+        if User.objects.filter(email=email).exists():
             raise serializers.ValidationError({'email': 'Email already exists'})
         
-        if User.objects.filter(username=attrs['username']).exists():
+        if User.objects.filter(username=username).exists():
             raise serializers.ValidationError({'username': 'Username already exists'})
         
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password2')
+        username = validated_data['username']
+        if not username:
+            base_username = validated_data['email'].split('@')[0]
+            max_attempts = 10
+            for _ in range(max_attempts):
+                new_username = f"{base_username}{random.randint(1, 9999):04d}"
+                if not User.objects.filter(username=new_username).exists():
+                    username = new_username
+                    break
+            else:
+                raise serializers.ValidationError({'username': 'Could not generate a unique username'})
 
         user = User.objects.create_user(
             email=validated_data['email'],
-            username=validated_data['username'],
+            username=username,
             password=validated_data['password'],
             description='',
             avatar='',

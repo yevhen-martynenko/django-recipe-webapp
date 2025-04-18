@@ -9,7 +9,7 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('Users must have an email address')
         if not username:
-            raise ValueError('Users must have a username')
+            username = email.split('@')[0]
         if not description:
             description = ''
 
@@ -47,7 +47,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
-    username = models.CharField(max_length=32, unique=True)
+    username = models.CharField(max_length=32, unique=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     avatar = models.ImageField(upload_to='image/', null=True, blank=True)
 
@@ -61,7 +61,7 @@ class User(AbstractBaseUser):
     is_banned = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
 
