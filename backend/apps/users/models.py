@@ -16,7 +16,6 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
-            description=description,
             is_active=True,
             **extra_fields,
         )
@@ -25,16 +24,20 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, description='', password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Superusers must have an email address')
         if password is None:
             raise ValueError('Superusers must have a password.')
+
+        username = email.split('@')[0]
+        description = ''
 
         user = self.create_user(
             email=self.normalize_email(email),
             username=username,
-            password=password,
             description=description,
-            avatar='',
+            password=password,
             **extra_fields
         )
         user.is_admin = True

@@ -1,8 +1,10 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 
 from .models import User
 from .serializers import (
+    UserSerializer,
     UserProfileSerializer,
     UserRegisterSerializer,
 )
@@ -28,4 +30,12 @@ class UserRegisterView(generics.CreateAPIView):
         )
 
 
+class UserListView(generics.ListAPIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAdminUser]
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+
+
 user_register_view = UserRegisterView.as_view()
+user_list_view = UserListView.as_view()
