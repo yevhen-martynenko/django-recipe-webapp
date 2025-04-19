@@ -1,7 +1,8 @@
 import random
 
-from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from .models import User
 
@@ -32,10 +33,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
         format="%Y-%m-%d %H:%M:%S",
         read_only=True
     )
+    url = serializers.HyperlinkedIdentityField(
+        view_name='user-detail-update',
+        lookup_field='username',
+    )
 
     class Meta:
         model = User
         fields = [
+            'url',
             'id',
             'email',
             'username',
@@ -101,3 +107,21 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             avatar='',
         )
         return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    url_delete = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'email',
+            'username',
+            'description',
+            'avatar',
+            'url_delete',
+        ]
+
+    def get_url_delete(self, obj):
+        request = self.context.get('request')
+        return reverse('user-delete', request=request)

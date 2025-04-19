@@ -52,7 +52,7 @@ class User(AbstractBaseUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=32, unique=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    avatar = models.ImageField(upload_to='image/', null=True, blank=True)
+    avatar = models.ImageField(upload_to='static/avatars/', null=True, blank=True, default="static/avatars/default_avatar.black.png")
 
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -62,6 +62,7 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
+    # is_confirmed = models.BooleanField(default=False)  # email verification
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

@@ -7,6 +7,11 @@ from .serializers import (
     UserSerializer,
     UserProfileSerializer,
     UserRegisterSerializer,
+    UserUpdateSerializer,
+)
+from .permissions import (
+    IsOwner,
+    IsAdmin,
 )
 
 
@@ -37,5 +42,30 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserProfileSerializer
 
 
+class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+    lookup_field = 'username'
+
+    def get_object(self):
+        return self.request.user
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return UserProfileSerializer
+        return UserUpdateSerializer
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+
 user_register_view = UserRegisterView.as_view()
+user_detail_update_view = UserDetailUpdateView.as_view()
 user_list_view = UserListView.as_view()
