@@ -1,5 +1,6 @@
 import random
 
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -125,3 +126,21 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     def get_url_delete(self, obj):
         request = self.context.get('request')
         return reverse('user-delete', kwargs={'username': obj.username}, request=request)
+
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        user = authenticate(request=request, username=email, password=password)
+
+        if not user:
+            raise serializers.ValidationError('Unable to log in with provided credentials.')
+
+        attrs['user'] = user
+        return attrs

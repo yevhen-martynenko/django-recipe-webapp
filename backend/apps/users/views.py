@@ -1,6 +1,8 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from django.http import HttpResponseRedirect
+from django.contrib.auth import login
 
 from .models import User
 from .serializers import (
@@ -8,6 +10,7 @@ from .serializers import (
     UserProfileSerializer,
     UserRegisterSerializer,
     UserUpdateSerializer,
+    UserLoginSerializer,
 )
 from .permissions import (
     IsOwner,
@@ -82,7 +85,27 @@ class UserDeleteView(generics.DestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class UserLoginView(generics.CreateAPIView):
+    serializer_class = UserLoginSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        login(request, user)
+
+        return Response(
+            {
+                'user': UserSerializer(user, context={'request': request}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 user_register_view = UserRegisterView.as_view()
 user_list_view = UserListView.as_view()
 user_detail_update_view = UserDetailUpdateView.as_view()
 user_delete_view = UserDeleteView.as_view()
+user_login_view = UserLoginView.as_view()
