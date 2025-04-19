@@ -66,6 +66,23 @@ class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
         return super().partial_update(request, *args, **kwargs)
 
 
+class UserDeleteView(generics.DestroyAPIView):
+    queryset = User.objects.all()
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
+    lookup_field = 'username'
+
+    def get_object(self):
+        return self.request.user
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 user_register_view = UserRegisterView.as_view()
-user_detail_update_view = UserDetailUpdateView.as_view()
 user_list_view = UserListView.as_view()
+user_detail_update_view = UserDetailUpdateView.as_view()
+user_delete_view = UserDeleteView.as_view()

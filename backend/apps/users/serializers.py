@@ -124,4 +124,4 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def get_url_delete(self, obj):
         request = self.context.get('request')
-        return reverse('user-delete', request=request)
+        return reverse('user-delete', kwargs={'username': obj.username}, request=request)
