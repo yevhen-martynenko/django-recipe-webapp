@@ -1,8 +1,8 @@
 from rest_framework import generics, status, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from django.http import HttpResponseRedirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 
 from .models import User
 from .serializers import (
@@ -40,7 +40,7 @@ class UserRegisterView(generics.CreateAPIView):
 
 class UserListView(generics.ListAPIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAdminUser, IsAdmin]
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
 
@@ -104,8 +104,24 @@ class UserLoginView(generics.CreateAPIView):
         )
 
 
+class UserLogoutView(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if hasattr(request.user, 'auth_token'):
+            request.user.auth_token.delete()
+
+        logout(request)
+        return Response(
+            {"detail": "Successfully logged out"},
+            status=status.HTTP_200_OK
+        )
+
+
 user_register_view = UserRegisterView.as_view()
 user_list_view = UserListView.as_view()
 user_detail_update_view = UserDetailUpdateView.as_view()
 user_delete_view = UserDeleteView.as_view()
 user_login_view = UserLoginView.as_view()
+user_logout_view = UserLogoutView.as_view()
