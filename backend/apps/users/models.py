@@ -62,7 +62,7 @@ class User(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
-    # is_confirmed = models.BooleanField(default=False)  # email verification
+    is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -70,7 +70,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     def __str__(self):
-        return self.username
+        return self.username or self.email or str(self.id)
 
     def has_perm(self, perm, obj=None):
         return self.is_active and self.is_superuser
