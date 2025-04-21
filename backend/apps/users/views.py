@@ -1,11 +1,14 @@
+from django.conf import settings
+from django.contrib.auth import login, logout
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
-from django.contrib.auth import login, logout
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authtoken.models import Token
 
 from .models import User
+from .authentication import TokenAuthentication
 from .serializers import (
     UserSerializer,
     UserProfileSerializer,
@@ -22,6 +25,13 @@ from .permissions import (
 
 
 class UserRegisterView(generics.CreateAPIView):
+    """
+    Register a new user
+
+    Creates a user account with the provided credentials and logs the user in
+
+    Returns an authentication token and the user's profile data
+    """
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
     authentication_classes = []
@@ -32,9 +42,14 @@ class UserRegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        user_serializer = UserRegisterSerializer(user, context={'request': request})
+        user_serializer = UserProfileSerializer(user, context={'request': request})
+        token, _ = Token.objects.get_or_create(user=user)
+
+        login(request, user)
+
         return Response(
             {
+                'token': token.key,
                 'user': user_serializer.data,
             },
             status=status.HTTP_201_CREATED,
@@ -42,6 +57,11 @@ class UserRegisterView(generics.CreateAPIView):
 
 
 class UserListView(generics.ListAPIView):
+    """
+    List all user profiles (admin only)
+
+    Returns full profile data for all users
+    """
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -49,6 +69,12 @@ class UserListView(generics.ListAPIView):
 
 
 class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieve or update the authenticated user's profile
+
+    - GET: Returns the current user's profile data
+    - PUT/PATCH: Update profile data of the authenticated user
+    """
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -62,17 +88,11 @@ class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
             return UserProfileSerializer
         return UserUpdateSerializer
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
-
 
 class UserPublicDetailView(generics.RetrieveAPIView):
+    """
+    Retrieve a public profile of a user by username (accessible if the user is verified and not banned)
+    """
     queryset = User.objects.all()
     serializer_class = UserPublicProfileSerializer
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -88,6 +108,11 @@ class UserPublicDetailView(generics.RetrieveAPIView):
 
 
 class UserDeleteView(generics.DestroyAPIView):
+    """
+    Delete user account
+
+    Deletes the authenticated user account and logs the user out
+    """
     queryset = User.objects.all()
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
@@ -99,11 +124,24 @@ class UserDeleteView(generics.DestroyAPIView):
         instance = self.get_object()
         self.perform_destroy(instance)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        logout(request)
+
+        return Response(
+            {
+                'detail': 'No Content: Account deleted successfully'
+            },
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
 
 class UserLoginView(generics.CreateAPIView):
+    """
+    Authenticate a user
+
+    Logs in the user, regenerates the authentication token, and returns the token with the user's profile data
+    """
     serializer_class = UserLoginSerializer
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -113,26 +151,41 @@ class UserLoginView(generics.CreateAPIView):
         user = serializer.validated_data['user']
         login(request, user)
 
+        Token.objects.filter(user=user).delete()
+        token, _ = Token.objects.get_or_create(user=user)
+
+        user_serializer = UserProfileSerializer(user, context={'request': request})
+
         return Response(
             {
-                'user': UserSerializer(user, context={'request': request}).data,
+                "token": token.key,
+                "user": user_serializer.data,
             },
             status=status.HTTP_200_OK,
         )
 
 
 class UserLogoutView(APIView):
+    """
+    Log out a user
+
+    Log out the authenticated user and deletes the current authentication token
+    """
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         if hasattr(request.user, 'auth_token'):
             request.user.auth_token.delete()
+        Token.objects.filter(user=request.user).delete()
 
         logout(request)
+
         return Response(
-            {"detail": "Successfully logged out"},
-            status=status.HTTP_200_OK
+            {
+                "detail": "Successfully logged out",
+            },
+            status=status.HTTP_200_OK,
         )
 
 
