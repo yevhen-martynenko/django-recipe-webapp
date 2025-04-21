@@ -35,7 +35,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only=True
     )
     url = serializers.HyperlinkedIdentityField(
-        view_name='user-detail-update',
+        view_name='user-public-detail',
         lookup_field='username',
     )
 
@@ -50,15 +50,38 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'avatar',
             'date_joined',
             'last_login',
-            'is_banned'
+            'is_banned',
         ]
         read_only_fields = [
             'id',
             'email',
             'date_joined',
             'last_login',
-            'is_banned'
+            'is_banned',
         ]
+
+
+class UserPublicProfileSerializer(serializers.ModelSerializer):
+    date_joined = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M:%S",
+        read_only=True,
+    )
+    last_login = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M:%S",
+        read_only=True,
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'description',
+            'avatar',
+            'date_joined',
+            'last_login',
+        ]
+        read_only_fields = fields
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -126,7 +149,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     def get_url_delete(self, obj):
         request = self.context.get('request')
         return reverse('user-delete', request=request)
-        # return reverse('user-delete', kwargs={'username': obj.username}, request=request)
 
 
 class UserLoginSerializer(serializers.Serializer):

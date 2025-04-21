@@ -1,6 +1,7 @@
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from django.contrib.auth import login, logout
 
@@ -8,6 +9,7 @@ from .models import User
 from .serializers import (
     UserSerializer,
     UserProfileSerializer,
+    UserPublicProfileSerializer,
     UserRegisterSerializer,
     UserUpdateSerializer,
     UserLoginSerializer,
@@ -15,6 +17,7 @@ from .serializers import (
 from .permissions import (
     IsOwner,
     IsAdmin,
+    IsVerifiedAndNotBanned,
 )
 
 
@@ -39,17 +42,17 @@ class UserRegisterView(generics.CreateAPIView):
 
 
 class UserListView(generics.ListAPIView):
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [permissions.IsAdminUser, IsAdmin]
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAdminUser, IsAdmin]
 
 
 class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
-    lookup_field = 'username'
 
     def get_object(self):
         return self.request.user
@@ -69,11 +72,25 @@ class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
         return super().partial_update(request, *args, **kwargs)
 
 
+class UserPublicDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserPublicProfileSerializer
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsVerifiedAndNotBanned]
+    lookup_field = 'username'
+
+    def get_object(self):
+        try:
+            user = User.objects.get(username=self.kwargs['username'])
+            return user
+        except User.DoesNotExist:
+            raise NotFound(detail="User with the given username does not exist")
+
+
 class UserDeleteView(generics.DestroyAPIView):
     queryset = User.objects.all()
     authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
-    lookup_field = 'username'
 
     def get_object(self):
         return self.request.user
@@ -122,6 +139,7 @@ class UserLogoutView(APIView):
 user_register_view = UserRegisterView.as_view()
 user_list_view = UserListView.as_view()
 user_detail_update_view = UserDetailUpdateView.as_view()
+user_public_detail_view = UserPublicDetailView.as_view()
 user_delete_view = UserDeleteView.as_view()
 user_login_view = UserLoginView.as_view()
 user_logout_view = UserLogoutView.as_view()
