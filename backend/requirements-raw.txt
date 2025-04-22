@@ -5,3 +5,5 @@ djangorestframework
 
 # dev
 requests
+pytest
+pytest-django
