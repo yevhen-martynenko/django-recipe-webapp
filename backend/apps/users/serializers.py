@@ -93,7 +93,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password']
+        fields = [
+            'email',
+            'username',
+            'password',
+        ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},
         }
@@ -152,18 +156,32 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
+    email_or_username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
 
     def validate(self, attrs):
         request = self.context.get('request')
-        email = attrs.get('email')
+        email_or_username = attrs.get('email_or_username')
         password = attrs.get('password')
 
-        user = authenticate(request=request, username=email, password=password)
+        user = None
+
+        try:
+            if '@' in email_or_username:
+                user_obj = User.objects.get(email=email_or_username)
+            else:
+                user_obj = User.objects.get(username=email_or_username)
+
+            user = authenticate(
+                request=request,
+                username=user_obj.email,
+                password=password,
+            )
+        except User.DoesNotExist:
+            pass
 
         if not user:
-            raise serializers.ValidationError('Unable to log in with provided credentials.')
+            raise serializers.ValidationError('Unable to log in with provided credentials')
 
         attrs['user'] = user
         return attrs
