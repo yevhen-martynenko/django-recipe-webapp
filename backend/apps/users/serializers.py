@@ -2,7 +2,7 @@ import random
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from rest_framework.reverse import reverse
 
 from .models import User
@@ -27,12 +27,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(
-        format="%Y-%m-%d %H:%M:%S",
-        read_only=True
+        format='%Y-%m-%d %H:%M:%S',
+        read_only=True,
     )
     last_login = serializers.DateTimeField(
-        format="%Y-%m-%d %H:%M:%S",
-        read_only=True
+        format='%Y-%m-%d %H:%M:%S',
+        read_only=True,
     )
     url = serializers.HyperlinkedIdentityField(
         view_name='user-public-detail',
@@ -63,11 +63,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserPublicProfileSerializer(serializers.ModelSerializer):
     date_joined = serializers.DateTimeField(
-        format="%Y-%m-%d %H:%M:%S",
+        format='%Y-%m-%d %H:%M:%S',
         read_only=True,
     )
     last_login = serializers.DateTimeField(
-        format="%Y-%m-%d %H:%M:%S",
+        format='%Y-%m-%d %H:%M:%S',
         read_only=True,
     )
 
@@ -100,19 +100,19 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'required': True},
+            'email': {'validators': []},
+            'username': {'validators': []},
         }
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        username = attrs.get('username', '')
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Email already exists.')
+        return value
 
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({'email': 'Email already exists'})
-        
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({'username': 'Username already exists'})
-        
-        return attrs
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('Username already exists.')
+        return value
 
     def create(self, validated_data):
         username = validated_data['username']
@@ -120,12 +120,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             base_username = validated_data['email'].split('@')[0]
             max_attempts = 10
             for _ in range(max_attempts):
-                new_username = f"{base_username}{random.randint(1, 9999):04d}"
+                new_username = f'{base_username}{random.randint(1, 9999):04d}'
                 if not User.objects.filter(username=new_username).exists():
                     username = new_username
                     break
             else:
-                raise serializers.ValidationError({'username': 'Could not generate a unique username'})
+                raise serializers.ValidationError({'username': 'Could not generate a unique username.'})
 
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -154,6 +154,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return reverse('user-delete', request=request)
 
+    def to_internal_value(self, data):
+        """
+        Raise validation error if unknown fields are passed
+        """
+        allowed = set(self.fields) - {
+            field for field, type_ in self.fields.items()
+            if isinstance(type_, serializers.SerializerMethodField)
+        }
+        incoming = set(data)
+
+        unknown_fields = incoming - allowed
+        if unknown_fields:
+            raise serializers.ValidationError({
+                field: 'This field is not allowed.' for field in unknown_fields
+            })
+
+        return super().to_internal_value(data)
+
 
 class UserLoginSerializer(serializers.Serializer):
     email_or_username = serializers.CharField(required=True)
@@ -181,7 +199,7 @@ class UserLoginSerializer(serializers.Serializer):
             pass
 
         if not user:
-            raise serializers.ValidationError('Unable to log in with provided credentials')
+            raise exceptions.AuthenticationFailed('Unable to log in with provided credentials.')
 
         attrs['user'] = user
         return attrs

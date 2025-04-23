@@ -7,7 +7,7 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 class UserManager(BaseUserManager):
     def create_user(self, email, username, description, password=None, **extra_fields):
         if not email:
-            raise ValueError('Users must have an email address')
+            raise ValueError('Users must have an email address.')
         if not username:
             username = email.split('@')[0]
         if not description:
@@ -16,6 +16,7 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
+            description=description,
             is_active=True,
             **extra_fields,
         )
@@ -26,7 +27,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('Superusers must have an email address')
+            raise ValueError('Superusers must have an email address.')
         if password is None:
             raise ValueError('Superusers must have a password.')
 

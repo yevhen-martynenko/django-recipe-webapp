@@ -5,7 +5,7 @@ class IsOwner(permissions.BasePermission):
     """
     Allows access only to owner
     """
-    message = "User must be owner"
+    message = 'User must be owner.'
 
     def has_object_permission(self, request, view, obj):
         owner = getattr(obj, 'user', obj)
@@ -16,7 +16,7 @@ class IsAdmin(permissions.BasePermission):
     """
     Allows access only to admin users
     """
-    message = "User must be admin"
+    message = 'User must be admin.'
 
     def has_permission(self, request, view):
         user = request.user
@@ -36,7 +36,7 @@ class IsVerifiedAndNotBanned(permissions.BasePermission):
     """
     Allows access only to users who are verified, active, and not banned
     """
-    message = "User must be verified, active, and not banned"
+    message = 'User must be verified, active, and not banned.'
 
     def has_permission(self, request, view):
         user = request.user

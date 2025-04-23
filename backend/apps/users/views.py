@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authtoken.models import Token
 
@@ -64,7 +64,7 @@ class UserListView(generics.ListAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAdminUser, IsAdmin]
 
 
@@ -77,7 +77,7 @@ class UserDetailUpdateView(generics.RetrieveUpdateAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_object(self):
@@ -95,7 +95,7 @@ class UserPublicDetailView(generics.RetrieveAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserPublicProfileSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsVerifiedAndNotBanned]
     lookup_field = 'username'
 
@@ -104,7 +104,7 @@ class UserPublicDetailView(generics.RetrieveAPIView):
             user = User.objects.get(username=self.kwargs['username'])
             return user
         except User.DoesNotExist:
-            raise NotFound(detail="User with the given username does not exist")
+            raise NotFound(detail='User with the given username does not exist.')
 
 
 class UserDeleteView(generics.DestroyAPIView):
@@ -114,21 +114,22 @@ class UserDeleteView(generics.DestroyAPIView):
     Deletes the authenticated user account and logs the user out
     """
     queryset = User.objects.all()
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_object(self):
         return self.request.user
 
     def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
+        user = self.get_object()
+        Token.objects.filter(user=user).delete()
+        self.perform_destroy(user)
 
         logout(request)
 
         return Response(
             {
-                'detail': 'No Content: Account deleted successfully'
+                'detail': 'No Content: Account deleted successfully.'
             },
             status=status.HTTP_204_NO_CONTENT,
         )
@@ -145,8 +146,14 @@ class UserLoginView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+        except AuthenticationFailed:
+            return Response(
+                {'non_field_errors': ['Unable to log in with provided credentials.']},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         user = serializer.validated_data['user']
         login(request, user)
@@ -158,8 +165,8 @@ class UserLoginView(generics.CreateAPIView):
 
         return Response(
             {
-                "token": token.key,
-                "user": user_serializer.data,
+                'token': token.key,
+                'user': user_serializer.data,
             },
             status=status.HTTP_200_OK,
         )
@@ -171,7 +178,7 @@ class UserLogoutView(APIView):
 
     Log out the authenticated user and deletes the current authentication token
     """
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -183,7 +190,7 @@ class UserLogoutView(APIView):
 
         return Response(
             {
-                "detail": "Successfully logged out",
+                'detail': 'Successfully logged out.',
             },
             status=status.HTTP_200_OK,
         )
