@@ -3,7 +3,10 @@ import random
 import io
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+
+from apps.users.models import User
 
 
 @pytest.fixture
@@ -50,3 +53,45 @@ def generate_user_data():
             data.update(overrides)
         return data
     return _generate
+
+
+@pytest.fixture
+def registered_user():
+    """
+    Fixture for creating a regular user
+    """
+    user = User.objects.create_user(
+        email='user@test.com',
+        username='',
+        password='Password019283',
+        description='',
+    )
+    Token.objects.get_or_create(user=user)
+    return user
+
+
+@pytest.fixture
+def registered_user2():
+    """
+    Fixture for creating a regular user
+    """
+    user = User.objects.create_user(
+        email='user2@test.com',
+        username='',
+        password='Password019283',
+        description='',
+    )
+    Token.objects.get_or_create(user=user)
+    return user
+
+
+@pytest.fixture
+def registered_admin():
+    """
+    Fixture for creating an admin user
+    """
+    user = User.objects.create_superuser(
+        email='admin@test.com',
+        password='1',
+    )
+    return user

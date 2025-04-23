@@ -13,10 +13,10 @@ def test_registration(client, api_auth_endpoints, generate_user_data):
         api_auth_endpoints['register'],
         user_data,
     )
+    assert response.status_code == status.HTTP_201_CREATED
+
     user = response.json().get('user')
     token = response.json().get('token')
-
-    assert response.status_code == status.HTTP_201_CREATED
     assert user.get('email') == user_data.get('email')
     assert user.get('username')
     assert 'password' not in user
@@ -33,14 +33,15 @@ def test_registration(client, api_auth_endpoints, generate_user_data):
 @pytest.mark.django_db
 def test_registration_with_username(client, api_auth_endpoints, generate_user_data):
     user_data = generate_user_data({'username': 'test'})
+
     response = client.post(
         api_auth_endpoints['register'],
         user_data,
     )
+    assert response.status_code == status.HTTP_201_CREATED
+
     user = response.json().get('user')
     token = response.json().get('token')
-
-    assert response.status_code == status.HTTP_201_CREATED
     assert user.get('email') == user_data.get('email')
     assert user.get('username') == user_data.get('username')
     assert 'password' not in user
@@ -67,9 +68,10 @@ def test_registration_duplicate_email(client, api_auth_endpoints, generate_user_
         generate_user_data({'email': 'test@test.com'})
     )
     assert response2.status_code == status.HTTP_400_BAD_REQUEST
-    response_data = response2.json()
-    assert 'email' in response_data
-    assert response_data['email'] == ['Email already exists']
+
+    data = response2.json()
+    assert 'email' in data
+    assert 'Email already exists.' in data['email']
 
 
 @pytest.mark.django_db
@@ -85,9 +87,10 @@ def test_registration_duplicate_username(client, api_auth_endpoints, generate_us
         generate_user_data({'username': 'test'})
     )
     assert response2.status_code == status.HTTP_400_BAD_REQUEST
-    response_data = response2.json()
-    assert 'username' in response_data
-    assert response_data['username'] == ['Username already exists']
+
+    data = response2.json()
+    assert 'username' in data
+    assert 'Username already exists.' in data['username']
 
 
 @pytest.mark.django_db
@@ -96,9 +99,9 @@ def test_registration_common_password(client, api_auth_endpoints, generate_user_
         api_auth_endpoints['register'],
         generate_user_data({'password': 'abc123'})
     )
-
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    response_data = response.json()
-    assert 'password' in response_data
-    assert 'This password is too common.' in response_data['password']
-    assert 'This password is too short. It must contain at least 8 characters.' in response_data['password']
+
+    data = response.json()
+    assert 'password' in data
+    assert 'This password is too common.' in data['password']
+    assert 'This password is too short. It must contain at least 8 characters.' in data['password']
