@@ -23,6 +23,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 INSTALLED_APPS = [
     # local
     'apps.users',
+    'apps.recipes',
 
     # default
     'django.contrib.admin',
@@ -35,10 +36,15 @@ INSTALLED_APPS = [
     # third-party
     'rest_framework',
     'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
     # custom
+    'allauth.account.middleware.AccountMiddleware',
 
     # default
     'django.middleware.security.SecurityMiddleware',
@@ -51,11 +57,16 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -98,11 +109,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -115,3 +123,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom
 AUTH_USER_MODEL = "users.User"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7
+
+auth_classes = [
+    'rest_framework.authentication.SessionAuthentication',
+    'apps.users.authentication.TokenAuthentication',
+]
+if DEBUG:
+    auth_classes = [
+        'rest_framework.authentication.SessionAuthentication',
+        'apps.users.authentication.TokenAuthentication',
+    ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)

@@ -2,6 +2,8 @@
 Django
 django-environ
 djangorestframework
+django-allauth
+jwt
 
 # dev
 requests

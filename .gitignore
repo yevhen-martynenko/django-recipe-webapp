@@ -28,6 +28,7 @@ collectstatic/
 # Database
 database/
 migrations/
+db.sqlite3
 *.sqlite3
 *.db
 
