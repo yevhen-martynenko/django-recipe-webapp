@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 
@@ -78,3 +79,13 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return self.is_active and self.is_staff
+
+
+class ActivationCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at

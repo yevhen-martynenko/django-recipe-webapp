@@ -1,5 +1,13 @@
+import secrets
+import datetime
+
 from django.conf import settings
+from django.utils import timezone
 from django.contrib.auth import login, logout
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,7 +15,7 @@ from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authtoken.models import Token
 
-from .models import User
+from .models import User, ActivationCode
 from .authentication import TokenAuthentication
 from .serializers import (
     UserSerializer,
@@ -45,7 +53,8 @@ class UserRegisterView(generics.CreateAPIView):
         user_serializer = UserProfileSerializer(user, context={'request': request})
         token, _ = Token.objects.get_or_create(user=user)
 
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        self.send_email(request, user)
 
         return Response(
             {
@@ -54,6 +63,37 @@ class UserRegisterView(generics.CreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+    def send_email(self, request, user):
+        code = secrets.token_urlsafe(32)
+        ActivationCode.objects.create(
+            user=user,
+            code=code,
+            expires_at=timezone.now() + datetime.timedelta(hours=24)
+        )
+
+        uid = urlsafe_base64_encode(force_bytes(user.id))
+        code_encoded = urlsafe_base64_encode(force_bytes(code))
+
+        activation_link = f'{settings.ACTIVATION_LINK_URL}?uid={uid}&code={code_encoded}'
+
+        subject = 'Activate your account'
+        message = render_to_string(
+            'email/activate_account.html',
+            {
+                'user': user,
+                'activation_link': activation_link,
+            }
+        )
+
+        email = EmailMessage(
+            subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [user.email]
+        )
+        email.content_subtype = 'html'
+        email.send()
 
 
 class UserListView(generics.ListAPIView):
@@ -156,7 +196,7 @@ class UserLoginView(generics.CreateAPIView):
             )
 
         user = serializer.validated_data['user']
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
         Token.objects.filter(user=user).delete()
         token, _ = Token.objects.get_or_create(user=user)
