@@ -2,12 +2,10 @@ import secrets
 import datetime
 
 from django.conf import settings
-from django.utils import timezone
+from django.db import transaction
 from django.contrib.auth import login, logout
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -30,6 +28,9 @@ from .permissions import (
     IsAdmin,
     IsVerifiedAndNotBanned,
 )
+from .tasks import (
+    send_activation_email,
+)
 
 
 class UserRegisterView(generics.CreateAPIView):
@@ -50,12 +51,11 @@ class UserRegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        user_serializer = UserProfileSerializer(user, context={'request': request})
         token, _ = Token.objects.get_or_create(user=user)
-
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        self.send_email(request, user)
+        send_activation_email(user=user)
 
+        user_serializer = UserProfileSerializer(user, context={'request': request})
         return Response(
             {
                 'token': token.key,
@@ -64,36 +64,76 @@ class UserRegisterView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
-    def send_email(self, request, user):
-        code = secrets.token_urlsafe(32)
-        ActivationCode.objects.create(
-            user=user,
-            code=code,
-            expires_at=timezone.now() + datetime.timedelta(hours=24)
-        )
 
-        uid = urlsafe_base64_encode(force_bytes(user.id))
-        code_encoded = urlsafe_base64_encode(force_bytes(code))
+class UserActivateView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
 
-        activation_link = f'{settings.ACTIVATION_LINK_URL}?uid={uid}&code={code_encoded}'
+    def get(self, request, *args, **kwargs):
+        uid_encoded = request.query_params.get('uid')
+        code_encoded = request.query_params.get('code')
 
-        subject = 'Activate your account'
-        message = render_to_string(
-            'email/activate_account.html',
-            {
-                'user': user,
-                'activation_link': activation_link,
-            }
-        )
+        if not uid_encoded or not code_encoded:
+            return Response(
+                {'detail': 'Missing activation data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        email = EmailMessage(
-            subject,
-            message,
-            settings.EMAIL_HOST_USER,
-            [user.email]
-        )
-        email.content_subtype = 'html'
-        email.send()
+        try:
+            uid = force_str(urlsafe_base64_decode(uid_encoded))
+            code = force_str(urlsafe_base64_decode(code_encoded))
+        except (TypeError, ValueError, UnicodeDecodeError):
+            return Response(
+                {'detail': 'Invalid activation link format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.filter(id=uid).first()
+        if not user:
+            return Response(
+                {'detail': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if user.is_verified:
+            return Response(
+                {'detail': 'Account already activated'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        activation_code = ActivationCode.objects.filter(user=user).first()
+        if not activation_code:
+            return Response(
+                {'detail': 'Activation code not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if activation_code.is_expired():
+            user.delete()
+            activation_code.delete()
+            return Response(
+                {'detail': 'Activation link has expired'},
+                status=status.HTTP_410_GONE
+            )
+        if not secrets.compare_digest(code, activation_code.code):
+            user.delete()
+            activation_code.delete()
+            return Response(
+                {'detail': 'Invalid activation code'},
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            with transaction.atomic():
+                user.is_verified = True
+                user.save()
+                activation_code.delete()
+            return Response(
+                {'detail': 'Account successfully activated'},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {'detail': 'Account activation failed'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class UserListView(generics.ListAPIView):
@@ -237,6 +277,7 @@ class UserLogoutView(APIView):
 
 
 user_register_view = UserRegisterView.as_view()
+user_activate_view = UserActivateView.as_view()
 user_list_view = UserListView.as_view()
 user_detail_update_view = UserDetailUpdateView.as_view()
 user_public_detail_view = UserPublicDetailView.as_view()

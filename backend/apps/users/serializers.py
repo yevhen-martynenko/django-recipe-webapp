@@ -115,22 +115,29 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        username = validated_data['username']
+        email = validated_data['email']
+        password = validated_data['password']
+        username = validated_data.get('username') or ''
+
         if not username:
-            base_username = validated_data['email'].split('@')[0]
-            max_attempts = 10
-            for _ in range(max_attempts):
-                new_username = f'{base_username}{random.randint(1, 9999):04d}'
-                if not User.objects.filter(username=new_username).exists():
-                    username = new_username
-                    break
+            base_username = email.split('@', 1)[0]
+
+            if not User.objects.filter(username=base_username).exists():
+                username = base_username
             else:
-                raise serializers.ValidationError({'username': 'Could not generate a unique username.'})
+                max_attempts = 10
+                for _ in range(max_attempts):
+                    new_username = f'{base_username}{random.randint(1, 9999):04d}'
+                    if not User.objects.filter(username=new_username).exists():
+                        username = new_username
+                        break
+                else:
+                    raise serializers.ValidationError({'username': 'Could not generate a unique username.'})
 
         user = User.objects.create_user(
-            email=validated_data['email'],
+            email=email,
             username=username,
-            password=validated_data['password'],
+            password=password,
             description='',
             avatar='',
         )

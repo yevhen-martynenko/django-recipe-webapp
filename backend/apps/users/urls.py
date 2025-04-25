@@ -3,6 +3,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 from .views import (
     user_register_view,
+    user_activate_view,
     user_list_view,
     user_detail_update_view,
     user_public_detail_view,
@@ -24,5 +25,6 @@ urlpatterns = [
         path('register/', user_register_view, name='user-register'),
         path('login/', user_login_view, name='user-login'),
         path('logout/', user_logout_view, name='user-logout'),
+        path('activate/', user_activate_view, name='user-activate'),
     ])),
 ]
