@@ -1,7 +1,8 @@
 import secrets
-import datetime
+import urllib.parse
 
 from django.conf import settings
+from django.shortcuts import redirect
 from django.db import transaction
 from django.contrib.auth import login, logout
 from django.utils.http import urlsafe_base64_decode
@@ -22,6 +23,7 @@ from .serializers import (
     UserRegisterSerializer,
     UserUpdateSerializer,
     UserLoginSerializer,
+    GoogleAuthSerializer,
 )
 from .permissions import (
     IsOwner,
@@ -276,6 +278,53 @@ class UserLogoutView(APIView):
         )
 
 
+class UserGoogleLoginView(APIView):
+    """
+    Google Login
+
+    Returns the Google OAuth2 callback URL
+    """
+    def get(self, request):
+        params = {
+            'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+            'redirect_uri': settings.GOOGLE_OAUTH2_CALLBACK_URL,
+            'response_type': 'code',
+            'scope': 'openid email profile',
+            'access_type': 'offline',
+            'prompt': 'consent',
+        }
+        google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+        return Response({'url': google_auth_url})
+
+
+class UserGoogleLoginCallbackView(APIView):
+    """
+    Google Login Callback
+
+    Handles the OAuth2 callback and returns an auth token
+    """
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        serializer = GoogleAuthSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        token, _ = Token.objects.get_or_create(user=user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        frontend_redirect_url = settings.FRONTEND_AFTER_GOOGLE_LOGIN_URL
+
+        query_params = urllib.parse.urlencode({
+            'token': token.key,
+        })
+
+        redirect_url = f"{frontend_redirect_url}?{query_params}"
+
+        return redirect(redirect_url)
+
+
 user_register_view = UserRegisterView.as_view()
 user_activate_view = UserActivateView.as_view()
 user_list_view = UserListView.as_view()
@@ -284,3 +333,5 @@ user_public_detail_view = UserPublicDetailView.as_view()
 user_delete_view = UserDeleteView.as_view()
 user_login_view = UserLoginView.as_view()
 user_logout_view = UserLogoutView.as_view()
+user_google_login_view = UserGoogleLoginView.as_view()
+user_google_login_callback_view = UserGoogleLoginCallbackView.as_view()

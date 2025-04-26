@@ -10,6 +10,8 @@ from .views import (
     user_delete_view,
     user_login_view,
     user_logout_view,
+    user_google_login_view,
+    user_google_login_callback_view,
 )
 
 
@@ -26,5 +28,7 @@ urlpatterns = [
         path('login/', user_login_view, name='user-login'),
         path('logout/', user_logout_view, name='user-logout'),
         path('activate/', user_activate_view, name='user-activate'),
+        path('google/', user_google_login_view, name='user-google-login'),
+        path('google/callback/', user_google_login_callback_view, name='user-google-login-callback'),
     ])),
 ]

@@ -1,9 +1,12 @@
 import random
+import requests
 
-from django.contrib.auth import authenticate
+from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers, exceptions
 from rest_framework.reverse import reverse
+from allauth.socialaccount.models import SocialAccount
 
 from .models import User
 
@@ -210,3 +213,86 @@ class UserLoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    code = serializers.CharField()
+
+    def validate_code(self, code):
+        response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH2_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+                'redirect_uri': settings.GOOGLE_OAUTH2_CALLBACK_URL,
+                'grant_type': 'authorization_code',
+            }
+        )
+        if response.status_code != 200:
+            raise serializers.ValidationError('Failed to fetch access token')
+        
+        access_token = response.json().get('access_token')
+        if not access_token:
+            raise serializers.ValidationError('Access token not found')
+        
+        self.access_token = access_token
+        return code
+
+    def validate(self, attrs):
+        user_info = self.get_user_info()
+        user = self.get_or_create_user(user_info)
+
+        attrs['user'] = user
+        return attrs
+    
+    def get_user_info(self):
+        response = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {self.access_token}'}
+        )
+        user_info = response.json() if response.status_code == 200 else None
+        
+        if not user_info:
+            raise serializers.ValidationError('Failed to fetch user info')
+        
+        return user_info
+
+    def get_or_create_user(self, user_info):
+        User = get_user_model()
+        email = user_info.get('email')
+        if not email:
+            raise serializers.ValidationError('Email not provided by Google')
+        sub = user_info.get('sub')
+        if not sub:
+            raise serializers.ValidationError('User ID (sub) not found')
+
+        try:
+            return SocialAccount.objects.get(provider='google', uid=sub).user
+        except SocialAccount.DoesNotExist:
+            pass
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                'username': email.split('@')[0],
+                'description': '',
+                'avatar': user_info.get('picture', ''),
+            }
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        SocialAccount.objects.create(
+            provider='google',
+            uid=sub,
+            user=user,
+            extra_data={
+                'access_token': self.access_token,
+                'extra_data': user_info,
+            }
+        )
+
+        return user
