@@ -43,7 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # cutsom
+    # custom
     'allauth.account.middleware.AccountMiddleware',
 
     # default
