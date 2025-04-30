@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from .views import (
+from apps.recipes.views.recipe_views import (
     recipe_create_view,
     recipe_list_view,
     recipe_list_user_view,
@@ -16,7 +16,8 @@ from .views import (
     recipe_ban_view,
     recipe_like_view,
     recipe_statistics_view,
-
+)
+from apps.recipes.views.tag_views import (
     tag_create_view,
     tag_suggest_view,
     tag_update_view,
@@ -34,7 +35,7 @@ urlpatterns = [
         path('random/', random_recipe_view, name='recipe-random'),
         path('deleted/', deleted_recipe_list_view, name='recipe-deleted'),
 
-        path('<uuid:id>/', include([
+        path('<slug:slug>/', include([
             path('', recipe_detail_view, name='recipe-detail'),
             path('update/', recipe_update_view, name='recipe-update'),
             path('delete/', recipe_delete_view, name='recipe-delete'),
@@ -51,7 +52,7 @@ urlpatterns = [
         path('', tag_list_view, name='tag-list'),
         path('create/', tag_create_view, name='tag-create'),
 
-        path('<uuid:id>/', include([
+        path('<slug:slug>/', include([
             path('', tag_detail_view, name='tag-detail'),
             path('suggest/', tag_suggest_view, name='tag-suggest'),
             path('update/', tag_update_view, name='tag-update'),
