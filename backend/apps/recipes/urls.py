@@ -1,30 +1,61 @@
-from django.urls import path
+from django.urls import path, include
 
 from .views import (
     recipe_create_view,
-    recipe_view,
-    random_recipe_view,
-    recipe_export_view,
-    recipe_favorite_view,
-    recipe_like_view,
     recipe_list_view,
+    recipe_list_user_view,
+    random_recipe_view,
+
+    recipe_detail_view,
+    recipe_update_view,
+    recipe_delete_view,
+    deleted_recipe_list_view,
+    recipe_restore_view,
+    recipe_export_view,
+    recipe_report_view,
+    recipe_ban_view,
+    recipe_like_view,
     recipe_statistics_view,
+
+    tag_create_view,
+    tag_suggest_view,
+    tag_update_view,
+    tag_delete_view,
     tag_list_view,
     tag_detail_view,
 )
 
 
 urlpatterns = [
-    path('', recipe_create_view, name='recipe-create'),
-    path('list/', recipe_list_view, name='recipe-list'),
-    path('random/', random_recipe_view, name='recipe-random'),
+    path('recipes/', include([
+        path('', recipe_list_user_view, name='recipe-list-user'),
+        path('list/', recipe_list_view, name='recipe-list'),
+        path('create/', recipe_create_view, name='recipe-create'),
+        path('random/', random_recipe_view, name='recipe-random'),
+        path('deleted/', deleted_recipe_list_view, name='recipe-deleted'),
 
-    path('<uuid:id>/', recipe_view, name='recipe-detail-update-delete'),
-    path('<uuid:id>/export/', recipe_export_view, name='recipe-export'),
-    path('<uuid:id>/favorite/', recipe_favorite_view, name='recipe-favorite'),
-    path('<uuid:id>/like/', recipe_like_view, name='recipe-like'),
-    path('<uuid:id>/statistics/', recipe_statistics_view, name='recipe-statistics'),
+        path('<uuid:id>/', include([
+            path('', recipe_detail_view, name='recipe-detail'),
+            path('update/', recipe_update_view, name='recipe-update'),
+            path('delete/', recipe_delete_view, name='recipe-delete'),
+            path('restore/', recipe_restore_view, name='recipe-restore'),
+            path('export/', recipe_export_view, name='recipe-export'),
+            path('report/', recipe_report_view, name='recipe-report'),
+            path('ban/', recipe_ban_view, name='recipe-ban'),
+            path('like/', recipe_like_view, name='recipe-like'),
+            path('statistics/', recipe_statistics_view, name='recipe-statistics'),
+        ])),
+    ])),
 
-    path('tags/', tag_list_view, name='tag-list'),
-    path('tags/<str:tag_name>/', tag_detail_view, name='tag-detail'),
+    path('tags/', include([
+        path('', tag_list_view, name='tag-list'),
+        path('create/', tag_create_view, name='tag-create'),
+
+        path('<uuid:id>/', include([
+            path('', tag_detail_view, name='tag-detail'),
+            path('suggest/', tag_suggest_view, name='tag-suggest'),
+            path('update/', tag_update_view, name='tag-update'),
+            path('delete/', tag_delete_view, name='tag-delete'),
+        ])),
+    ])),
 ]

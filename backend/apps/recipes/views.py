@@ -1,11 +1,45 @@
-from rest_framework import generics, views
+from rest_framework import generics, views, status, permissions
+from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication
+
+from apps.users.authentication import TokenAuthentication
+from apps.users.permissions import (
+    IsAdmin,
+    IsVerifiedAndNotBanned,
+)
+from apps.recipes.models import (
+    Recipe,
+)
+from .serializers import (
+    RecipeSerializer,
+    RecipeCreateSerializer,
+)
 
 
 class RecipeCreateView(generics.CreateAPIView):
     """
-    POST /recipes/ - Create a recipe
+    Create a new recipe
+
+    Creates a new recipe associated with the authenticated user
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeCreateSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsVerifiedAndNotBanned]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recipe = serializer.save()
+
+        recipe_serializer = RecipeSerializer(recipe, context={'request': request})
+        return Response(
+            {
+                'recipe': recipe_serializer.data,
+                'detail': 'Recipe created successfully.',
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class RecipeView(generics.RetrieveUpdateDestroyAPIView):
