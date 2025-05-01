@@ -11,7 +11,7 @@ User = get_user_model()
 class Tag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=64, unique=True)
-    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    slug = models.SlugField(max_length=256, unique=True, blank=True, null=True)
 
     class Meta:
         ordering = ['name']
@@ -44,6 +44,7 @@ class RecipeStatus(models.TextChoices):
 class Recipe(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=64)
+    slug = models.SlugField(max_length=256, unique=True, blank=True, null=True)
     description = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=64, choices=RecipeStatus.choices, default=RecipeStatus.DRAFT)
     final_image = models.ImageField(upload_to='static/recipes/', null=True, blank=True)
@@ -59,19 +60,12 @@ class Recipe(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
     tags = models.ManyToManyField(Tag, related_name='recipes', blank=True)
 
-    # Meta
-    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True)
+    # Status
     private = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
-
-    # Status
     is_featured = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
-
-    # Statistics
-    views = models.PositiveIntegerField(default=0)
-    viewed_by = models.ManyToManyField(User, related_name='viewed_recipes', blank=True)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,29 +110,128 @@ class Recipe(models.Model):
             return False
         return timezone.now() >= self.scheduled_permanent_deletion_time()
 
-    def add_view(self, user):
-        if user.is_authenticated and not self.viewed_by.filter(id=user.id).exists():
-            self.viewed_by.add(user)
-            self.views += 1
-            self.save(update_fields=["views"])
+    def toggle_like(self, user):
+        if not user.is_authenticated:
+            return None
+
+        like, created = Like.objects.get_or_create(user=user, recipe=self)
+        if not created:
+            like.delete()
+            return False
+        return True
 
     @property
     def likes_count(self):
         return self.likes.count()
 
+    def add_view(self, user):
+        if not user.is_authenticated:
+            return
+        View.objects.get_or_create(recipe=self, user=user)
+
     @property
     def views_count(self):
-        return self.views
+        return self.views.count()
+
+
+class SpecialRecipeBlock(models.Model):
+    INGREDIENTS = 'ingredients'
+    TIMES = 'times'
+    CALORIES = 'calories'
+    MACRONUTRIENTS = 'macronutrients'
+    
+    BLOCK_TYPE_CHOICES = [
+        (INGREDIENTS, 'Ingredients List'),
+        (TIMES, 'Preparation & Cooking Time'),
+        (CALORIES, 'Calorie Count'),
+        (MACRONUTRIENTS, 'Protein, Carbs & Fat Breakdown'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='special_blocks')
+    type = models.CharField(max_length=32, choices=BLOCK_TYPE_CHOICES, unique=True)
+    content = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="""
+            Structured content varies by block type:
+            -    Ingredients: {'items': ['flour', 'sugar', 'milk']}
+            -    Time: {'prep_minutes': 10, 'cook_minutes': 30}
+            -    Calories: {'kcal': 200}
+            -    Macronutrients: {'protein': 5, 'carbs': 20, 'fat': 10}
+        """.strip()
+    )
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ('recipe', 'type')
+        verbose_name = "Special Recipe Block"
+        verbose_name_plural = "Special Recipe Blocks"
+
+    def __str__(self):
+        return f"{self.recipe.title} - {self.type}"
+
+
+class RecipeBlock(models.Model):
+    TEXT = 'text'
+    IMAGE = 'image'
+    BLOCK_TYPE_CHOICES = [
+        (TEXT, 'Text Block'),
+        (IMAGE, 'Image Block'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='blocks')
+    type = models.CharField(max_length=8, choices=BLOCK_TYPE_CHOICES, default=TEXT)
+    content = models.TextField(
+        blank=True,
+        null=True,
+        help_text="""
+            Used for TEXT blocks. Example:
+            -    'Preheat oven to 350°F (175°C).'
+        """.strip()
+    )
+    image = models.ImageField(
+        upload_to='static/recipes/blocks/',
+        blank=True,
+        null=True,
+        help_text="Used for IMAGE blocks."
+    )
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'Recipe Block'
+        verbose_name_plural = 'Recipe Blocks'
+
+    def __str__(self):
+        return f"{self.recipe.title} - {self.type}"
 
 
 class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='liked_recipes')
-    created_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('recipe', 'user')
         indexes = [
-            models.Index(fields=['created_at']),
+            models.Index(fields=['recipe', 'timestamp']),
+        ]
+
+
+class View(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewed_recipes')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('recipe', 'user')
+        indexes = [
+            models.Index(fields=['recipe', 'timestamp']),
         ]
