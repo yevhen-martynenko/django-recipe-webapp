@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -85,14 +86,22 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        super().clean()
+
+        if self.status == RecipeStatus.PUBLISHED and not self.final_image:
+            raise ValidationError('A published recipe must have a final image.')
+
     def save(self, *args, **kwargs):
+        self.full_clean()
+
         if not self.slug:
             self.slug = slugify(self.title)
 
             base_slug = self.slug
             counter = 1
             while Recipe.objects.filter(slug=self.slug).exists():
-                self.slug = f"{base_slug}-{counter}"
+                self.slug = f'{base_slug}-{counter}'
                 counter += 1
 
         super().save(*args, **kwargs)
@@ -167,11 +176,69 @@ class SpecialRecipeBlock(models.Model):
     class Meta:
         ordering = ['order']
         unique_together = ('recipe', 'type')
-        verbose_name = "Special Recipe Block"
-        verbose_name_plural = "Special Recipe Blocks"
+        verbose_name = 'Special Recipe Block'
+        verbose_name_plural = 'Special Recipe Blocks'
 
     def __str__(self):
-        return f"{self.recipe.title} - {self.type}"
+        return f'{self.recipe.title} - {self.type}'
+
+    def clean(self):
+        super().clean()
+
+        validators = {
+            self.INGREDIENTS: lambda content: self._validate_ingredients(content),
+            self.TIMES: lambda content: self._validate_times(content),
+            self.CALORIES: lambda content: self._validate_calories(content),
+            self.MACRONUTRIENTS: lambda content: self._validate_macronutrients(content),
+        }
+
+        if self.type in validators:
+            try:
+                validators[self.type](self.content)
+            except ValueError as e:
+                raise ValidationError({'content': str(e)})
+        else:
+            raise ValidationError({'type': f'Unsupported block type: {self.type}.'})
+
+    def _validate_ingredients(self, content):
+        if not isinstance(content, dict) or 'items' not in content:
+            raise ValueError('Ingredients content must contain "items" list.')
+        if not isinstance(content['items'], list):
+            raise ValueError('"items" must be a list.')
+        for item in content['items']:
+            if not isinstance(item, str) or not item.strip():
+                raise ValueError('Each ingredient must be a non-empty string.')
+
+    def _validate_times(self, content):
+        if not isinstance(content, dict):
+            raise ValueError('Time content must be a dictionary.')
+        for key in ('prep_minutes', 'cook_minutes'):
+            if key not in content:
+                raise ValueError(f'Missing "{key}" in time block.')
+            if not isinstance(content[key], int) or content[key] < 0:
+                raise ValueError(f'"{key}" must be a non-negative integer.')
+
+    def _validate_calories(self, content):
+        if not isinstance(content, dict) or 'kcal' not in content:
+            raise ValueError('Calories content must contain "kcal".')
+        if not isinstance(content['kcal'], int) or content['kcal'] < 0:
+            raise ValueError('"kcal" must be a non-negative integer.')
+
+    def _validate_macronutrients(self, content):
+        required = {'protein', 'carbs', 'fat'}
+        if not isinstance(content, dict):
+            raise ValueError('Macronutrients must be a dictionary.')
+        if not required.issubset(content):
+            missing = required - set(content)
+            raise ValueError(f'Missing macronutrients: {', '.join(missing)}.')
+        for key in required:
+            value = content[key]
+            if not isinstance(value, (int, float)) or value < 0:
+                raise ValueError(f'{key.capitalize()} must be a non-negative number.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class RecipeBlock(models.Model):
@@ -197,7 +264,7 @@ class RecipeBlock(models.Model):
         upload_to='static/recipes/blocks/',
         blank=True,
         null=True,
-        help_text="Used for IMAGE blocks."
+        help_text='Used for IMAGE blocks.'
     )
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -208,7 +275,37 @@ class RecipeBlock(models.Model):
         verbose_name_plural = 'Recipe Blocks'
 
     def __str__(self):
-        return f"{self.recipe.title} - {self.type}"
+        return f'{self.recipe.title} - {self.type}'
+
+    def clean(self):
+        super().clean()
+
+        validators = {
+            self.TEXT: lambda content: self._validate_text(content),
+            self.IMAGE: lambda content: self._validate_image(content),
+        }
+
+        if self.type in validators:
+            try:
+                validators[self.type](self.content)
+            except ValueError as e:
+                raise ValidationError({'content': str(e)})
+        else:
+            raise ValidationError({'type': f'Unsupported block type: {self.type}.'})
+
+    def _validate_text(self, content):
+        if not content:
+            raise ValueError('Text block must have non-empty content.')
+        self.image = None
+
+    def _validate_image(self, content):
+        if not self.image:
+            raise ValidationError({'image': 'Image block must include an uploaded image.'})
+        self.content = ''
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class Like(models.Model):
