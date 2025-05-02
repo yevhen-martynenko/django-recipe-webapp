@@ -1,9 +1,19 @@
 from rest_framework import serializers, exceptions
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from .models import Recipe
+
+from apps.recipes.models import (
+    Recipe,
+    RecipeBlock,
+    SpecialRecipeBlock,
+    Tag,
+    Like,
+    View,
+)
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class BaseSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
 
     url = serializers.HyperlinkedIdentityField(
@@ -11,19 +21,116 @@ class RecipeSerializer(serializers.ModelSerializer):
         lookup_field='id',
     )
 
+    def get_is_liked(self, obj):
+        user = self.context.get('request').user
+        if not user or not user.is_authenticated:
+            return False
+        return obj.likes.filter(user=user).exists()
+
+    def to_internal_value(self, data):
+        """
+        Raise validation error if unknown fields are passed (only on full update/create)
+        """
+        if not self.partial:
+            allowed = set(self.fields)
+            incoming = set(data)
+
+            unknown_fields = incoming - allowed
+            if unknown_fields:
+                raise serializers.ValidationError({
+                    field: 'This field is not allowed.' for field in unknown_fields
+                })
+
+        return super().to_internal_value(data)
+
+
+class SpecialRecipeBlockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecialRecipeBlock
+        fields = [
+            'id',
+            'recipe',
+            'type',
+            'content',
+            'order',
+        ]
+        read_only_fields = [
+            'id',
+            'recipe',
+        ]
+
+    def validate(self, data):
+        instance = self.instance or self.Meta.model(**data)
+        for attr, value in data.items():
+            setattr(instance, attr, value)
+
+        try:
+            instance.full_clean()
+        except DjangoValidationError as e:
+            raise DRFValidationError(e.message_dict)
+
+        return data
+
+
+class RecipeBlockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeBlock
+        fields = [
+            'id',
+            'recipe',
+            'type',
+            'content',
+            'image',
+            'order',
+        ]
+        read_only_fields = [
+            'id',
+            'recipe',
+        ]
+
+    def validate(self, data):
+        instance = self.instance or self.Meta.model(**data)
+        for attr, value in data.items():
+            setattr(instance, attr, value)
+
+        try:
+            instance.full_clean()
+        except DjangoValidationError as e:
+            raise DRFValidationError(e.message_dict)
+
+        return data
+
+
+class RecipeSerializer(BaseSerializer):
+    special_blocks = SpecialRecipeBlockSerializer(many=True)
+    blocks = RecipeBlockSerializer(many=True)
+
     class Meta:
         model = Recipe
         fields = [
             'url',
             'id',
             'author',
-            'tags',
+
             'title',
             'description',
+            'status',
             'final_image',
             'source_url',
+            'tags',
             'private',
-            'views',
+
+            'calories',
+            'protein',
+            'fat',
+            'carbs',
+
+            'is_liked',
+            'views_count',
+            'likes_count',
+            'blocks',
+            'special_blocks',
+
             'created_at',
             'updated_at',
         ]
@@ -31,25 +138,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             'url',
             'id',
             'author',
-            'views',
+
             'created_at',
             'updated_at',
         ]
-
-    def to_internal_value(self, data):
-        """
-        Raise validation error if unknown fields are passed
-        """
-        allowed = set(self.fields)
-        incoming = set(data)
-
-        unknown_fields = incoming - allowed
-        if unknown_fields:
-            raise serializers.ValidationError({
-                field: 'This field is not allowed.' for field in unknown_fields
-            })
-
-        return super().to_internal_value(data)
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -58,6 +150,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title',
             'description',
+            'status',
             'final_image',
             'source_url',
             'tags',

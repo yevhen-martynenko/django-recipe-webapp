@@ -143,7 +143,7 @@ class Recipe(models.Model):
         return self.views.count()
 
 
-class SpecialRecipeBlock(models.Model):
+class RecipeSpecialBlock(models.Model):
     INGREDIENTS = 'ingredients'
     TIMES = 'times'
     CALORIES = 'calories'
@@ -171,7 +171,6 @@ class SpecialRecipeBlock(models.Model):
         """.strip()
     )
     order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['order']
@@ -267,7 +266,6 @@ class RecipeBlock(models.Model):
         help_text='Used for IMAGE blocks.'
     )
     order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['order']
