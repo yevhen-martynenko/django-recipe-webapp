@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from apps.recipes.models import (
     Recipe,
     RecipeBlock,
-    SpecialRecipeBlock,
+    RecipeSpecialBlock,
     Tag,
     Like,
     View,
@@ -17,8 +17,16 @@ class BaseSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='recipe-detail-update-delete',
-        lookup_field='id',
+        view_name='recipe-detail',
+        lookup_field='slug',
+    )
+    url_update = serializers.HyperlinkedIdentityField(
+        view_name='recipe-update',
+        lookup_field='slug',
+    )
+    url_delete = serializers.HyperlinkedIdentityField(
+        view_name='recipe-delete',
+        lookup_field='slug',
     )
 
     def get_is_liked(self, obj):
@@ -44,9 +52,9 @@ class BaseSerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
 
-class SpecialRecipeBlockSerializer(serializers.ModelSerializer):
+class RecipeSpecialBlockSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SpecialRecipeBlock
+        model = RecipeSpecialBlock
         fields = [
             'id',
             'recipe',
@@ -102,13 +110,15 @@ class RecipeBlockSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(BaseSerializer):
-    special_blocks = SpecialRecipeBlockSerializer(many=True)
+    special_blocks = RecipeSpecialBlockSerializer(many=True)
     blocks = RecipeBlockSerializer(many=True)
 
     class Meta:
         model = Recipe
         fields = [
             'url',
+            'url_update',
+            'url_delete',
             'id',
             'author',
 
@@ -136,12 +146,90 @@ class RecipeSerializer(BaseSerializer):
         ]
         read_only_fields = [
             'url',
+            'url_update',
+            'url_delete',
             'id',
             'author',
 
+            'views_count',
+            'likes_count',
+
             'created_at',
             'updated_at',
+            'published_at',
         ]
+
+
+class RecipeAdminSerializer(BaseSerializer):
+    special_blocks = RecipeSpecialBlockSerializer(many=True)
+    blocks = RecipeBlockSerializer(many=True)
+
+    url_ban = serializers.HyperlinkedIdentityField(
+        view_name='recipe-ban',
+        lookup_field='slug',
+    )
+
+    class Meta:
+        model = Recipe
+        fields = [
+            'url',
+            'url_ban',
+            'id',
+            'author',
+
+            'title',
+            'slug',
+            'description',
+            'status',
+            'final_image',
+            'source_url',
+            'tags',
+            'private',
+
+            'banned',
+            'is_featured',
+            'is_deleted',
+            'deleted_at',
+
+            'is_liked',
+            'views_count',
+            'likes_count',
+            'blocks',
+            'special_blocks',
+
+            'meta_title',
+            'meta_description',
+
+            'created_at',
+            'updated_at',
+            'published_at',
+        ]
+        read_only_fields = fields
+
+
+class RecipeMinimalSerializer(BaseSerializer):
+    is_liked = serializers.SerializerMethodField()
+    likes_count = serializers.IntegerField(read_only=True)
+    views_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = [
+            'url',
+            'id',
+            'author',
+
+            'title',
+            'description',
+            'final_image',
+
+            'is_liked',
+            'views_count',
+            'likes_count',
+            
+            'published_at',
+        ]
+        read_only_fields = fields
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -172,3 +260,22 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         recipe.tags.set(tags)
 
         return recipe
+
+
+class DeletedRecipeSerializer(RecipeSerializer):
+    is_deleted = serializers.BooleanField()
+
+    url_restore = serializers.HyperlinkedIdentityField(
+        view_name='recipe-restore',
+        lookup_field='slug',
+    )
+
+    class Meta(RecipeSerializer.Meta):
+        fields = RecipeSerializer.Meta.fields + [
+            'url_restore',
+            'is_deleted',
+        ]
+        read_only_fields = [
+            field for field in RecipeSerializer.Meta.fields + ['url_restore']
+            if field != 'is_deleted'
+        ]
