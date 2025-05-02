@@ -7,7 +7,6 @@ from apps.recipes.models import (
     Recipe,
     RecipeBlock,
     RecipeSpecialBlock,
-    Tag,
     Like,
     View,
 )
@@ -186,7 +185,7 @@ class RecipeAdminSerializer(BaseSerializer):
             'tags',
             'private',
 
-            'banned',
+            'is_banned',
             'is_featured',
             'is_deleted',
             'deleted_at',
@@ -253,12 +252,35 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_description(self, value):
         return value
 
+    def _get_macronutrients(self, special_blocks: list[dict]) -> dict:
+        """
+        Extracts macronutrients from the special blocks if available
+        """
+        for block in special_blocks:
+            if block.get('type') == 'macronutrients':
+                content = block.get('content', {})
+                return {
+                    'calories': content.get('calories'),
+                    'protein': content.get('protein'),
+                    'fat': content.get('fat'),
+                    'carbs': content.get('carbs'),
+                }
+        return {}
+
     def create(self, validated_data):
         user = self.context['request'].user
         tags = validated_data.pop('tags', [])
-        recipe = Recipe.objects.create(author=user, **validated_data)
-        recipe.tags.set(tags)
+        blocks = self.context.get('blocks', [])
+        special_blocks = self.context.get('special_blocks', [])
+        macronutrients = self._get_macronutrients(special_blocks)
 
+        recipe = Recipe.objects.create(
+            author=user,
+            **validated_data,
+            **macronutrients
+        )
+
+        recipe.tags.set(tags)
         return recipe
 
 
@@ -276,6 +298,40 @@ class DeletedRecipeSerializer(RecipeSerializer):
             'is_deleted',
         ]
         read_only_fields = [
-            field for field in RecipeSerializer.Meta.fields + ['url_restore']
+            field for field in RecipeSerializer.Meta.fields
             if field != 'is_deleted'
+        ] + ['url_restore']
+
+
+class RecipeBanSerializer(RecipeAdminSerializer):
+    is_banned = serializers.BooleanField()
+
+    class Meta:
+        model = Recipe
+        fields = RecipeAdminSerializer.Meta.fields
+        read_only_fields = [
+            field for field in RecipeAdminSerializer.Meta.fields
+            if field != 'is_banned'
         ]
+
+
+class RecipeStatisticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = [
+            'id',
+            'author',
+
+            'title',
+            'description',
+            'tags',
+            'private',
+
+            'views_count',
+            'likes_count',
+
+            'created_at',
+            'updated_at',
+            'published_at',
+        ]
+        read_only_fields = fields
