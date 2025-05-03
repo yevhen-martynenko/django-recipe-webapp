@@ -51,7 +51,7 @@ class Recipe(models.Model):
     final_image = models.ImageField(upload_to='static/recipes/', null=True, blank=True)
     source_url = models.URLField(blank=True, null=True)
 
-    # Nutrition information
+    # Macronutrient information
     calories = models.PositiveIntegerField(null=True, blank=True)
     protein = models.FloatField(null=True, blank=True)
     fat = models.FloatField(null=True, blank=True)
@@ -63,7 +63,7 @@ class Recipe(models.Model):
 
     # Status
     private = models.BooleanField(default=False)
-    banned = models.BooleanField(default=False)
+    is_banned = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -330,3 +330,39 @@ class View(models.Model):
         indexes = [
             models.Index(fields=['recipe', 'timestamp']),
         ]
+
+
+class RecipeReport(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('reviewed', 'Reviewed'),
+        ('resolved', 'Resolved'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='reports')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # TODO: rename to reason, add response field
+    description = models.TextField()
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('recipe', 'user')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f'Report on "{self.recipe.title}" by "{self.user}"'
+
+    def clean(self):
+        super().clean()
+
+        if len(self.description.strip()) < 10:
+            raise ValidationError({'description': 'Please provide a more detailed description.'})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)

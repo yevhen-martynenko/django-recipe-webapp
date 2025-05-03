@@ -7,6 +7,7 @@ from apps.recipes.models import (
     Recipe,
     RecipeBlock,
     RecipeSpecialBlock,
+    RecipeReport,
     Like,
     View,
 )
@@ -335,3 +336,27 @@ class RecipeStatisticsSerializer(serializers.ModelSerializer):
             'published_at',
         ]
         read_only_fields = fields
+
+
+class RecipeReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeReport
+        fields = [
+            'id',
+            'recipe',
+
+            'user',
+            'description',
+            'status',
+
+            'created_at',
+        ]
+        read_only_fields = [
+            'id',
+            'recipe',
+
+            'user',
+            'description',
+
+            'created_at',
+        ]
