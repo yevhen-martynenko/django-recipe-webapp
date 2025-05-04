@@ -15,6 +15,7 @@ from apps.recipes.models import (
 
 class BaseSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
+    is_liked = serializers.SerializerMethodField()
 
     url = serializers.HyperlinkedIdentityField(
         view_name='recipe-detail',
@@ -30,10 +31,8 @@ class BaseSerializer(serializers.ModelSerializer):
     )
 
     def get_is_liked(self, obj):
-        user = self.context.get('request').user
-        if not user or not user.is_authenticated:
-            return False
-        return obj.likes.filter(user=user).exists()
+        user = self.context['request'].user
+        return obj.is_liked_by(user)
 
     def to_internal_value(self, data):
         """

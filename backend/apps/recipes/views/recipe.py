@@ -9,10 +9,21 @@ from apps.users.permissions import (
 )
 from apps.recipes.models import (
     Recipe,
+    RecipeBlock,
+    RecipeSpecialBlock,
+    Like,
+    View,
+    RecipeReport,
 )
 from apps.recipes.serializers.recipe import (
     RecipeSerializer,
+    RecipeAdminSerializer,
+    RecipeMinimalSerializer,
     RecipeCreateSerializer,
+    DeletedRecipeSerializer,
+    RecipeBanSerializer,
+    RecipeStatisticsSerializer,
+    RecipeReportSerializer,
 )
 
 
@@ -20,7 +31,8 @@ class RecipeCreateView(generics.CreateAPIView):
     """
     Create a new recipe
 
-    Creates a new recipe associated with the authenticated user
+    Creates a new recipe associated with the authenticated user, including optional
+    content blocks and structured special blocks
     """
     queryset = Recipe.objects.all()
     serializer_class = RecipeCreateSerializer
@@ -28,9 +40,30 @@ class RecipeCreateView(generics.CreateAPIView):
     permission_classes = [IsVerifiedAndNotBanned]
 
     def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        blocks = data.pop('blocks', [])
+        special_blocks = data.pop('special_blocks', [])
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         recipe = serializer.save()
+
+        for block in blocks:
+            RecipeBlock.objects.create(
+                recipe=recipe,
+                type=block.get('type', RecipeBlock.TEXT),
+                content=block.get('content', ''),
+                image=block.get('image', None),
+                order=block.get('order', 0),
+            )
+
+        for block in special_blocks:
+            RecipeSpecialBlock.objects.create(
+                recipe=recipe,
+                type=block.get('type'),
+                content=block.get('content', {}),
+                order=block.get('order', 0),
+            )
 
         recipe_serializer = RecipeSerializer(recipe, context={'request': request})
         return Response(
