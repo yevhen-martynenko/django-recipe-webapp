@@ -3,6 +3,7 @@ Django
 django-environ
 djangorestframework
 django-allauth
+django-filter
 jwt
 
 # dev

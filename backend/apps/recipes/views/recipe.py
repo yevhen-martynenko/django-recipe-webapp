@@ -1,7 +1,9 @@
-from django.db.models import Q
+from django.db.models import Q, Count
 from rest_framework import generics, views, status, permissions
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.users.authentication import TokenAuthentication
 from apps.users.permissions import (
@@ -10,6 +12,7 @@ from apps.users.permissions import (
 )
 from apps.recipes.models import (
     Recipe,
+    RecipeStatus,
     RecipeBlock,
     RecipeSpecialBlock,
     Like,
@@ -25,6 +28,10 @@ from apps.recipes.serializers.recipe import (
     RecipeBanSerializer,
     RecipeStatisticsSerializer,
     RecipeReportSerializer,
+)
+from apps.recipes.filters import (
+    RecipeFilter,
+    RecipeAdminFilter,
 )
 
 
@@ -76,6 +83,11 @@ class RecipeCreateView(generics.CreateAPIView):
         )
 
 
+class NoFilterBrowsableAPIRenderer(BrowsableAPIRenderer):
+    def get_filter_form(self, data, view, request):
+        return None
+
+
 class BaseRecipeListView(generics.ListAPIView):
     """
     Base view for listing recipes with filtering by tag, search, and sort
@@ -84,14 +96,20 @@ class BaseRecipeListView(generics.ListAPIView):
     - ?tag=<tag_name>: Filter recipes by tag
     - ?search=<query>: Full-text search in recipe title or description
     - ?sort=<field>: Sort recipes by a given field (e.g., created_at, -created_at)
+    - ?<field>=<value>: Filter recipes by a given field
 
-    Override 'permission_classes' and 'serializer_class' in subclasses.
+    Override 'permission_classes', 'serializer_class' and 'fiterset_class' in subclasses.
     """
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication, SessionAuthentication]
+    renderer_classes = [NoFilterBrowsableAPIRenderer, JSONRenderer]
+    filter_backends = [DjangoFilterBackend]
 
     def get_queryset(self):
-        queryset = Recipe.objects.all()
+        queryset = Recipe.objects.annotate(
+            view_count=Count('views'),
+            like_count=Count('likes')
+        )
         if not self.request.query_params.get('sort'):
             queryset = queryset.filter(is_deleted=False)
         return queryset
@@ -131,17 +149,31 @@ class BaseRecipeListView(generics.ListAPIView):
 class RecipeAdminListView(BaseRecipeListView):
     """
     Admin view for listing recipes with full access
+
+    Optional query parameters:
+    - ?tag=<tag_name>: Filter recipes by tag
+    - ?search=<query>: Full-text search in recipe title or description
+    - ?sort=<field>: Sort recipes by a given field (e.g., created_at, -created_at)
+    - ?<field>=<value>: Filter recipes by a given field
     """
     serializer_class = RecipeAdminSerializer
     permission_classes = [permissions.IsAdminUser, IsAdmin]
+    filterset_class = RecipeAdminFilter
 
 
 class RecipeListView(BaseRecipeListView):
     """
     Public user view for listing recipes
+
+    Optional query parameters:
+    - ?tag=<tag_name>: Filter recipes by tag
+    - ?search=<query>: Full-text search in recipe title or description
+    - ?sort=<field>: Sort recipes by a given field (e.g., created_at, -created_at)
+    - ?<field>=<value>: Filter recipes by a given field
     """
     serializer_class = RecipeMinimalSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_class = RecipeFilter
 
 
 class RandomRecipeView(generics.RetrieveAPIView):

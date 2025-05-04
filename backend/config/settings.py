@@ -143,6 +143,10 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+}
+
 FRONTEND_AFTER_GOOGLE_LOGIN_URL = env('FRONTEND_AFTER_GOOGLE_LOGIN_URL')
 ACTIVATION_LINK_URL = env('ACTIVATION_LINK_URL')
 
