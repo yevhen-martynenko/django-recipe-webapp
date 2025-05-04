@@ -1,9 +1,9 @@
 from django.urls import path, include
 
-from apps.recipes.views.recipe_views import (
+from apps.recipes.views.recipe import (
     recipe_create_view,
     recipe_list_view,
-    recipe_list_user_view,
+    recipe_admin_list_view,
     random_recipe_view,
 
     recipe_detail_view,
@@ -17,20 +17,20 @@ from apps.recipes.views.recipe_views import (
     recipe_like_view,
     recipe_statistics_view,
 )
-from apps.recipes.views.tag_views import (
+from apps.recipes.views.tag import (
     tag_create_view,
-    tag_suggest_view,
-    tag_update_view,
-    tag_delete_view,
     tag_list_view,
     tag_detail_view,
+    tag_update_view,
+    tag_delete_view,
+    tag_suggest_view,
 )
 
 
 urlpatterns = [
     path('recipes/', include([
-        path('', recipe_list_user_view, name='recipe-list-user'),
-        path('list/', recipe_list_view, name='recipe-list'),
+        path('', recipe_list_view, name='recipe-list-user'),
+        path('list/', recipe_admin_list_view, name='recipe-list'),
         path('create/', recipe_create_view, name='recipe-create'),
         path('random/', random_recipe_view, name='recipe-random'),
         path('deleted/', deleted_recipe_list_view, name='recipe-deleted'),
@@ -54,9 +54,9 @@ urlpatterns = [
 
         path('<slug:slug>/', include([
             path('', tag_detail_view, name='tag-detail'),
-            path('suggest/', tag_suggest_view, name='tag-suggest'),
             path('update/', tag_update_view, name='tag-update'),
             path('delete/', tag_delete_view, name='tag-delete'),
+            path('suggest/', tag_suggest_view, name='tag-suggest'),
         ])),
     ])),
 ]
