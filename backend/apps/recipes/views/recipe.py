@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics, views, status, permissions
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
@@ -75,23 +76,72 @@ class RecipeCreateView(generics.CreateAPIView):
         )
 
 
-class RecipeListView(generics.ListAPIView):
+class BaseRecipeListView(generics.ListAPIView):
     """
-    GET /recipes/?tag=<str:tag_name>
-    GET /recipes/?search=<str:query>
-    GET /recipes/?sort=<date>
+    Base view for listing recipes with filtering by tag, search, and sort
+
+    Optional query parameters:
+    - ?tag=<tag_name>: Filter recipes by tag
+    - ?search=<query>: Full-text search in recipe title or description
+    - ?sort=<field>: Sort recipes by a given field (e.g., created_at, -created_at)
+
+    Override 'permission_classes' and 'serializer_class' in subclasses.
     """
-    pass
+    queryset = Recipe.objects.all()
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        if not self.request.query_params.get('sort'):
+            queryset = queryset.filter(is_deleted=False)
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        tag = request.query_params.get('tag')
+        search = request.query_params.get('search')
+        sort = request.query_params.get('sort')
+
+        if tag:
+            return self.list_by_tag(request, tag.lower())
+        if search:
+            return self.list_by_search(request, search.lower())
+        if sort:
+            return self.list_by_sort(request, sort.lower())
+
+        return super().list(request, *args, **kwargs)
+
+    def list_by_tag(self, request, tag):
+        queryset = self.get_queryset().filter(tags__name__iexact=tag)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def list_by_search(self, request, query):
+        queryset = self.get_queryset().filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def list_by_sort(self, request, sort):
+        queryset = self.get_queryset().order_by(sort)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
-class RecipeAdminListView(generics.ListAPIView):
+class RecipeAdminListView(BaseRecipeListView):
     """
-    Only Admins
-    GET /recipes/?tag=<str:tag_name>
-    GET /recipes/?search=<str:query>
-    GET /recipes/?sort=<date>
+    Admin view for listing recipes with full access
     """
-    pass
+    serializer_class = RecipeAdminSerializer
+    permission_classes = [permissions.IsAdminUser, IsAdmin]
+
+
+class RecipeListView(BaseRecipeListView):
+    """
+    Public user view for listing recipes
+    """
+    serializer_class = RecipeMinimalSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class RandomRecipeView(generics.RetrieveAPIView):
