@@ -1,6 +1,7 @@
 from django.db.models import Q, Count
 from rest_framework import generics, views, status, permissions
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,6 +29,10 @@ from apps.recipes.serializers.recipe import (
     RecipeBanSerializer,
     RecipeStatisticsSerializer,
     RecipeReportSerializer,
+)
+from apps.recipes.permissions import (
+    IsRecipeOwner,
+    IsRecipeOwnerOrPublic,
 )
 from apps.recipes.filters import (
     RecipeFilter,
@@ -185,9 +190,48 @@ class RandomRecipeView(generics.RetrieveAPIView):
 
 class RecipeDetailView(generics.RetrieveAPIView):
     """
-    GET /recipes/<id:uuid>/ - View Specific Recipe
+    Retrieve a specific recipe by UUID
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [permissions.AllowAny, IsRecipeOwnerOrPublic]
+    lookup_field = 'slug'
+
+    def get(self, request, *args, **kwargs):
+        recipe = self.get_object()
+
+        if recipe.is_banned and not request.user.is_superuser:
+            return Response(
+                {
+                    'detail': 'This recipe has been flagged as inappropriate and is hidden.'
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if recipe.is_deleted:
+            return Response(
+                {
+                    'detail': 'This recipe has been deleted.'
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if recipe.status != RecipeStatus.PUBLISHED and not (
+            request.user == recipe.author or request.user.is_superuser
+        ):
+            raise NotFound(detail='No Recipe matches the given query.')
+
+        recipe.add_view(request.user)
+        recipe_serializer = self.get_serializer(recipe)
+
+        return Response(
+            {
+                'recipe': recipe_serializer.data,
+                'detail': 'Recipe retrieved successfully.',
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RecipeUpdateView(generics.UpdateAPIView):

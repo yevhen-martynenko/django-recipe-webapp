@@ -129,6 +129,11 @@ class Recipe(models.Model):
             return False
         return True
 
+    def is_liked_by(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.likes.filter(user=user).exists()
+
     @property
     def likes_count(self):
         return self.likes.count()
@@ -342,8 +347,8 @@ class RecipeReport(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='reports')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    # TODO: rename to reason, add response field
-    description = models.TextField()
+    reason = models.TextField()
+    response = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -360,8 +365,8 @@ class RecipeReport(models.Model):
     def clean(self):
         super().clean()
 
-        if len(self.description.strip()) < 10:
-            raise ValidationError({'description': 'Please provide a more detailed description.'})
+        if len(self.reason.strip()) < 10:
+            raise ValidationError({'reason': 'Please provide a more detailed reason.'})
 
     def save(self, *args, **kwargs):
         self.full_clean()
