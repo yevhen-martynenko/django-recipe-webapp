@@ -1,3 +1,4 @@
+from django.utils.text import slugify
 from rest_framework import serializers, exceptions
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -109,8 +110,8 @@ class RecipeBlockSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(BaseSerializer):
-    special_blocks = RecipeSpecialBlockSerializer(many=True)
-    blocks = RecipeBlockSerializer(many=True)
+    blocks = RecipeBlockSerializer(many=True, required=False)
+    special_blocks = RecipeSpecialBlockSerializer(many=True, required=False)
 
     class Meta:
         model = Recipe
@@ -158,10 +159,22 @@ class RecipeSerializer(BaseSerializer):
             'published_at',
         ]
 
+    def update(self, instance, validated_data):
+        title = validated_data.get('title')
+        if title and title != instance.title:
+            new_slug = slugify(title)
+            base_slug = new_slug
+            counter = 1
+            while Recipe.objects.filter(slug=new_slug).exclude(id=instance.id).exists():
+                new_slug = f'{base_slug}-{counter}'
+                counter += 1
+            instance.slug = new_slug
+        return super().update(instance, validated_data)
+
 
 class RecipeAdminSerializer(BaseSerializer):
-    special_blocks = RecipeSpecialBlockSerializer(many=True)
-    blocks = RecipeBlockSerializer(many=True)
+    blocks = RecipeBlockSerializer(many=True, required=False)
+    special_blocks = RecipeSpecialBlockSerializer(many=True, required=False)
 
     url_ban = serializers.HyperlinkedIdentityField(
         view_name='recipe-ban',
@@ -345,7 +358,8 @@ class RecipeReportSerializer(serializers.ModelSerializer):
             'recipe',
 
             'user',
-            'description',
+            'reason',
+            'response',
             'status',
 
             'created_at',
@@ -355,7 +369,7 @@ class RecipeReportSerializer(serializers.ModelSerializer):
             'recipe',
 
             'user',
-            'description',
+            'reason',
 
             'created_at',
         ]

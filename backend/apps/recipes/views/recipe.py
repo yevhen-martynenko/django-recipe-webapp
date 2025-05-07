@@ -1,7 +1,8 @@
+from django.utils import timezone
 from django.db.models import Q, Count
 from rest_framework import generics, views, status, permissions
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -33,6 +34,7 @@ from apps.recipes.serializers.recipe import (
 from apps.recipes.permissions import (
     IsRecipeOwner,
     IsRecipeOwnerOrPublic,
+    IsNotAdmin,
 )
 from apps.recipes.filters import (
     RecipeFilter,
@@ -236,16 +238,62 @@ class RecipeDetailView(generics.RetrieveAPIView):
 
 class RecipeUpdateView(generics.UpdateAPIView):
     """
-    PUT /recipes/<id:uuid>/ - Update Specific Recipe
+    Partially update a recipe
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsNotAdmin, IsRecipeOwner]
+    lookup_field = 'slug'
+
+    def patch(self, request, *args, **kwargs):
+        recipe = self.get_object()
+
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        recipe = serializer.save()
+
+        return Response(
+            {
+                'recipe': serializer.data,
+                'detail': 'Recipe updated successfully.',
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RecipeDeleteView(generics.DestroyAPIView):
     """
-    DELETE /recipes/<id:uuid>/ - Delete Specific Recipe
+    Soft delete a recipe - Marks the recipe as deleted
+
+    Only the recipe owner can perform this action.
     """
-    pass
+    queryset = Recipe.objects.all()
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsNotAdmin, IsRecipeOwner]
+    lookup_field = 'slug'
+
+    def perform_destroy(self, instance):
+        if instance.is_deleted:
+            raise ValidationError('Recipe is already deleted.')
+
+        instance.delete()
+
+    def delete(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        self.perform_destroy(recipe)
+
+        return Response(
+            {
+                'detail': 'Recipe deleted successfully.'
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class DeletedRecipeListView(generics.ListAPIView):
