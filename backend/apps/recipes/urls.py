@@ -35,7 +35,7 @@ urlpatterns = [
         path('random/', random_recipe_view, name='recipe-random'),
         path('deleted/', deleted_recipe_list_view, name='recipe-deleted'),
 
-        path('<slug:slug>/', include([
+        path('view/<slug:slug>/', include([
             path('', recipe_detail_view, name='recipe-detail'),
             path('update/', recipe_update_view, name='recipe-update'),
             path('delete/', recipe_delete_view, name='recipe-delete'),
@@ -52,7 +52,7 @@ urlpatterns = [
         path('', tag_list_view, name='tag-list'),
         path('create/', tag_create_view, name='tag-create'),
 
-        path('<slug:slug>/', include([
+        path('view/<slug:slug>/', include([
             path('', tag_detail_view, name='tag-detail'),
             path('update/', tag_update_view, name='tag-update'),
             path('delete/', tag_delete_view, name='tag-delete'),

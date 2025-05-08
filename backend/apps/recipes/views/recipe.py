@@ -185,10 +185,45 @@ class RecipeListView(BaseRecipeListView):
 
 class RandomRecipeView(generics.RetrieveAPIView):
     """
-    GET /recipes/random/ - Get a random recipe
+    Retrieve a random non-banned, non-deleted, public or owned recipe
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.AllowAny, IsRecipeOwnerOrPublic]
 
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_banned=False, is_deleted=False)
+        user = self.request.user
+
+        if not user.is_authenticated or not user.is_superuser:
+            qs = qs.filter(
+                Q(status=RecipeStatus.PUBLISHED) |
+                Q(author=user)
+            )
+
+        return qs
+
+    def get(self, request, *args, **kwargs):
+        random_recipe = self.get_queryset().order_by('?').first()
+
+        if not random_recipe:
+            return Response(
+                {'detail': 'No recipes found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        random_recipe.add_view(request.user)
+
+        recipe_serializer = self.get_serializer(random_recipe)
+        return Response(
+            {
+                'recipe': recipe_serializer.data,
+                'detail': 'Random recipe retrieved successfully.',
+            },
+            status=status.HTTP_200_OK,
+        )
+        
 
 class RecipeDetailView(generics.RetrieveAPIView):
     """
