@@ -27,6 +27,7 @@ from apps.recipes.serializers.recipe import (
     RecipeMinimalSerializer,
     RecipeCreateSerializer,
     DeletedRecipeSerializer,
+    RecipeRestoreSerializer,
     RecipeBanSerializer,
     RecipeStatisticsSerializer,
     RecipeReportSerializer,
@@ -333,16 +334,41 @@ class RecipeDeleteView(generics.DestroyAPIView):
 
 class DeletedRecipeListView(generics.ListAPIView):
     """
-    GET /recipes/deleted/ - Admin/Owner views deleted recipes
+    Retrieve a list of deleted recipes
     """
-    pass
+    serializer_class = DeletedRecipeSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsNotAdmin]
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Recipe.objects.filter(
+            is_deleted=True,
+            author=self.request.user
+        )
 
 
-class RecipeRestoreView(generics.RetrieveAPIView):
+class RecipeRestoreView(generics.UpdateAPIView):
     """
-    POST /recipes/<id:uuid>/restore/ - Restore Specific Recipe
+    Restore a deleted recipe
     """
-    pass
+    serializer_class = RecipeRestoreSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsNotAdmin, IsRecipeOwner]
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Recipe.objects.filter(is_deleted=True, author=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        recipe = self.get_object()
+
+        recipe.is_deleted = False
+        recipe.deleted_at = None
+        recipe.save(update_fields=['is_deleted', 'deleted_at'])
+
+        serializer = self.get_serializer(recipe)
+        return Response(serializer.data)
 
 
 class RecipeExportView(generics.RetrieveAPIView):

@@ -315,6 +315,13 @@ class DeletedRecipeSerializer(RecipeSerializer):
         ] + ['url_restore']
 
 
+class RecipeRestoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ['is_deleted', 'deleted_at']
+        read_only_fields = fields
+
+
 class RecipeBanSerializer(RecipeAdminSerializer):
     is_banned = serializers.BooleanField()
 
