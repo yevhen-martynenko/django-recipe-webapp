@@ -413,11 +413,29 @@ class RecipeReportView(generics.CreateAPIView):
         )
 
 
-class RecipeBanView(generics.RetrieveAPIView):
+class RecipeBanView(generics.UpdateAPIView):
     """
-    POST /recipes/<id:uuid>/ban/ - Ban Specific Recipe
+    Toggle the ban status of a recipe
+
+    Only accessible to admin users
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeBanSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAdminUser, IsAdmin]
+    lookup_field = 'slug'
+
+    def patch(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        recipe.is_banned = not recipe.is_banned
+        recipe.save(update_fields=['is_banned'])
+
+        return Response(
+            {
+                'detail': f"Recipe has been {'banned' if recipe.is_banned else 'unbanned'}.",
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RecipeLikeView(generics.RetrieveAPIView):
