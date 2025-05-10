@@ -29,6 +29,10 @@ class BaseSerializer(serializers.ModelSerializer):
         view_name='recipe-delete',
         lookup_field='slug',
     )
+    url_report = serializers.HyperlinkedIdentityField(
+        view_name='recipe-report',
+        lookup_field='slug',
+    )
 
     def get_is_liked(self, obj):
         user = self.context['request'].user
@@ -118,6 +122,7 @@ class RecipeSerializer(BaseSerializer):
             'url',
             'url_update',
             'url_delete',
+            'url_report',
             'id',
             'author',
 
@@ -375,7 +380,8 @@ class RecipeReportSerializer(serializers.ModelSerializer):
             'recipe',
 
             'user',
-            'reason',
+            'response',
+            'status',
 
             'created_at',
         ]

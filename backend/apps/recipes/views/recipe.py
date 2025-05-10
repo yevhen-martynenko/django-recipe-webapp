@@ -106,7 +106,7 @@ class BaseRecipeListView(generics.ListAPIView):
     - ?sort=<field>: Sort recipes by a given field (e.g., created_at, -created_at)
     - ?<field>=<value>: Filter recipes by a given field
 
-    Override 'permission_classes', 'serializer_class' and 'fiterset_class' in subclasses.
+    Override 'permission_classes', 'serializer_class' and 'fiterset_class' in subclasses
     """
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication, SessionAuthentication]
@@ -307,7 +307,7 @@ class RecipeDeleteView(generics.DestroyAPIView):
     """
     Soft delete a recipe - Marks the recipe as deleted
 
-    Only the recipe owner can perform this action.
+    Only the recipe owner can perform this action
     """
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication, SessionAuthentication]
@@ -380,11 +380,37 @@ class RecipeExportView(generics.RetrieveAPIView):
     pass
 
 
-class RecipeReportView(generics.RetrieveAPIView):
+class RecipeReportView(generics.CreateAPIView):
     """
-    POST /recipes/<id:uuid>/report/ - Report Specific Recipe
+    Report a specific recipe
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeReportSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'slug'
+
+    def create(self, request, *args, **kwargs):
+        recipe = self.get_object()
+
+        if RecipeReport.objects.filter(recipe=recipe, user=request.user).exists():
+            return Response(
+                {
+                    'detail': 'You have already reported this recipe.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(recipe=recipe, user=request.user)
+
+        return Response(
+            {
+                'detail': 'Recipe reported successfully.'
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class RecipeBanView(generics.RetrieveAPIView):
