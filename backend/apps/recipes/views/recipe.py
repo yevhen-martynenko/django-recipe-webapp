@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.http import HttpResponse
 from django.db.models import Q, Count
 from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
@@ -41,6 +42,9 @@ from apps.recipes.permissions import (
 from apps.recipes.filters import (
     RecipeFilter,
     RecipeAdminFilter,
+)
+from apps.recipes.renderers import (
+    PlainTextRenderer,
 )
 
 
@@ -374,11 +378,121 @@ class RecipeRestoreView(generics.UpdateAPIView):
 
 class RecipeExportView(generics.RetrieveAPIView):
     """
-    GET /recipes/<id:uuid>/export/?format=pdf - Save as PDF
-    GET /recipes/<id:uuid>/export/?format=txt - Save as TXT
-    GET /recipes/<id:uuid>/export/?format=json - Save as JSON
+    Retrieve and export a recipe in a specified format
+
+    Supported formats:
+    - pdf
+    - txt
+    - json
+    - csv
+    - yaml
+    - html
+    - markdown
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsVerifiedAndNotBanned, IsRecipeOwnerOrPublic]
+    renderer_classes = [PlainTextRenderer, JSONRenderer, BrowsableAPIRenderer]
+    lookup_field = 'slug'
+
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        try:
+            return Recipe.objects.get(slug=slug)
+        except Recipe.DoesNotExist:
+            raise NotFound(detail='Recipe not found.')
+
+    def get(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        self.check_object_permissions(request, recipe)
+
+        export_format = self.request.query_params.get('format')
+
+        if not export_format:
+            serializer = self.get_serializer(recipe)
+            return Response(
+                {
+                    'detail': 'Recipe exported successfully.',
+                    'recipe': serializer.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        formats = {
+            'pdf': self._export_pdf,
+            'txt': self._export_txt,
+            'json': self._export_json,
+            'csv': self._export_csv,
+            'yaml': self._export_yaml,
+            'html': self._export_html,
+            'md': self._export_markdown,
+        }
+
+        export_func = formats.get(export_format.lower())
+        if not export_func:
+            return Response(
+                {'detail': 'Unsupported format.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return export_func(recipe)
+
+    def _export_pdf(self, recipe):
+        # TODO: add pdf export
+        pass
+
+    def _export_txt(self, recipe):
+        content = (
+            f'Author: {recipe.author.username}\n'
+            f'Title: {recipe.title}\n'
+            f'Description: {recipe.description or "No description"}\n'
+            f'Views: {recipe.views_count}\n'
+            f'Likes: {recipe.likes_count}\n'
+        )
+
+        if recipe.calories is not None or recipe.protein is not None or recipe.fat is not None or recipe.carbs is not None:
+            content += '\nNutritional Information:\n'
+            if recipe.calories is not None:
+                content += f'Calories: {recipe.calories} kcal\n'
+            if recipe.protein is not None:
+                content += f'Protein: {recipe.protein}g\n'
+            if recipe.fat is not None:
+                content += f'Fat: {recipe.fat}g\n'
+            if recipe.carbs is not None:
+                content += f'Carbohydrates: {recipe.carbs}g\n'
+
+        if recipe.tags.exists():
+            tags = ', '.join(tag.name for tag in recipe.tags.all())
+            content += f'\nTags: {tags}\n'
+
+        if recipe.source_url:
+            content += f'\nSource: {recipe.source_url}\n'
+
+        filename = f'{recipe.slug}.txt'
+        response = HttpResponse(content, content_type='text/plain', status=status.HTTP_200_OK)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    def _export_json(self, recipe):
+        serializer = self.get_serializer(recipe)
+        return Response(serializer.data, content_type='application/json')
+
+    def _export_csv(self, recipe):
+        # TODO: add csv export
+        pass
+
+    def _export_yaml(self, recipe):
+        # TODO: add yaml export
+        pass
+
+    def _export_html(self, recipe):
+        # TODO: add html export
+        pass
+
+    def _export_markdown(self, recipe):
+        # TODO: add markdown export
+        pass
 
 
 class RecipeReportView(generics.CreateAPIView):
