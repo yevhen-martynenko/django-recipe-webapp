@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.db.models import Q, Count
-from rest_framework import generics, views, status, permissions
+from rest_framework import generics, status, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.authentication import SessionAuthentication
@@ -438,11 +439,48 @@ class RecipeBanView(generics.UpdateAPIView):
         )
 
 
-class RecipeLikeView(generics.RetrieveAPIView):
+class RecipeLikeView(APIView):
     """
-    POST /recipes/<id:uuid>/like/ - Like Specific Recipe
+    Allows authenticated users to like or unlike a recipe
     """
-    pass
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        recipe = self._get_recipe(self.kwargs['slug'])
+
+        like, created = Like.objects.get_or_create(recipe=recipe, user=request.user)
+        if not created:
+            return Response(
+                {'detail': 'You have already liked this recipe.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {'detail': 'Recipe liked.'},
+            status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request, *args, **kwargs):
+        recipe = self._get_recipe(self.kwargs['slug'])
+
+        deleted, _ = Like.objects.filter(recipe=recipe, user=request.user).delete()
+        if not deleted:
+            return Response(
+                {'detail': 'You haven\'t liked this recipe yet.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {'detail': 'Recipe unliked.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    def _get_recipe(self, slug):
+        try:
+            return Recipe.objects.get(slug=slug)
+        except Recipe.DoesNotExist:
+            raise NotFound(detail='Recipe not found.')
 
 
 class RecipeStatisticsView(generics.RetrieveAPIView):
