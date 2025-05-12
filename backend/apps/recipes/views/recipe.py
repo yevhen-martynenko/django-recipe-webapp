@@ -599,9 +599,47 @@ class RecipeLikeView(APIView):
 
 class RecipeStatisticsView(generics.RetrieveAPIView):
     """
-    GET /recipes/<id:uuid>/statistics/ - Admin/Owner views statistics
+    Retrieve statistics for a given recipe including time-series data for visualization
+
+    Query Parameters:
+    - time-range: Time period to retrieve statistics for
+      Options: 'day', '3days', 'week', 'month', '3months', '6months', 'year'
+      Default: 'week'
+
+    - time-view: Granularity of the time series data
+      Options: 'hour', 'day', 'week', 'month', 'year'
+      Default: 'day'
     """
-    pass
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeStatisticsSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsRecipeOwner]
+    lookup_field = 'slug'
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context.update({
+            'request': self.request
+        })
+        return context
+
+    def get(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        serializer = self.get_serializer(recipe)
+
+        time_range = request.query_params.get('time-range', 'week')
+        time_view = request.query_params.get('time-view', 'day')
+
+        return Response(
+            {
+                'recipe': serializer.data,
+                'detail': f'Recipe statistics retrieved successfully for <{time_range}> with <{time_view}> granularity.',
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 recipe_create_view = RecipeCreateView.as_view()

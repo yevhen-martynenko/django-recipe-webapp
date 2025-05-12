@@ -1,5 +1,10 @@
+from datetime import timedelta, datetime
+
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import serializers, exceptions
+from django.db.models import Count
+from django.db.models.functions import TruncHour, TruncDate, TruncWeek, TruncMonth, TruncYear
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
@@ -347,25 +352,122 @@ class RecipeBanSerializer(RecipeAdminSerializer):
 
 
 class RecipeStatisticsSerializer(serializers.ModelSerializer):
+    likes_count = serializers.IntegerField(read_only=True)
+    views_count = serializers.IntegerField(read_only=True)
+    time_series_data = serializers.SerializerMethodField()
+
     class Meta:
         model = Recipe
         fields = [
             'id',
             'author',
-
             'title',
-            'description',
+            'slug',
             'tags',
-            'private',
 
             'views_count',
             'likes_count',
+            'time_series_data',
 
             'created_at',
             'updated_at',
             'published_at',
         ]
         read_only_fields = fields
+
+    def _get_time_range_dates(self, time_range):
+        end_date = timezone.now()
+
+        if time_range == 'day':
+            start_date = end_date
+        elif time_range == '3days':
+            start_date = end_date - timedelta(days=3)
+        elif time_range == 'week':
+            start_date = end_date - timedelta(days=7)
+        elif time_range == 'month':
+            start_date = end_date - timedelta(days=30)
+        elif time_range == '3months':
+            start_date = end_date - timedelta(days=90)
+        elif time_range == '6months':
+            start_date = end_date - timedelta(days=180)
+        elif time_range == 'year':
+            start_date = end_date - timedelta(days=365)
+        else:
+            start_date = end_date - timedelta(days=7)
+
+        return start_date, end_date
+
+    def _get_trunc_function(self, time_view):
+        if time_view == 'hour':
+            return TruncHour, 'hour'
+        elif time_view == 'day':
+            return TruncDate, 'date'
+        elif time_view == 'week':
+            return TruncWeek, 'week'
+        elif time_view == 'month':
+            return TruncMonth, 'month'
+        elif time_view == 'year':
+            return TruncYear, 'year'
+        else:
+            return TruncDate, 'date'
+
+    def _get_formatted_date(self, date_value, time_view):
+        """
+        Format dates consistently based on the time view
+        """
+        if time_view == 'hour':
+            return date_value.strftime('%Y-%m-%d %H:00')
+        elif time_view == 'day':
+            return date_value.strftime('%Y-%m-%d')
+        elif time_view == 'week':
+            return f"{date_value.strftime('%Y')}-W{date_value.strftime('%V')}"
+        elif time_view == 'month':
+            return date_value.strftime('%Y-%m')
+        elif time_view == 'year':
+            return date_value.strftime('%Y')
+        else:
+            return date_value.strftime('%Y-%m-%d')
+
+    def get_time_series_data(self, obj):
+        time_range = self.context['request'].query_params.get('time-range', 'week')
+        time_view = self.context['request'].query_params.get('time-view', 'day')
+
+        start_date, end_date = self._get_time_range_dates(time_range)
+        trunc_func, date_field = self._get_trunc_function(time_view)
+
+        views_by_date = View.objects.filter(
+            recipe=obj,
+            timestamp__gte=start_date,
+            timestamp__lte=end_date
+        ).annotate(
+            period=trunc_func('timestamp')
+        ).values('period').annotate(
+            count=Count('id')
+        ).order_by('period')
+
+        likes_by_date = Like.objects.filter(
+            recipe=obj,
+            timestamp__gte=start_date,
+            timestamp__lte=end_date
+        ).annotate(
+            period=trunc_func('timestamp')
+        ).values('period').annotate(
+            count=Count('id')
+        ).order_by('period')
+
+        time_series = []
+
+        total_views = sum(entry['views'] for entry in time_series)
+        total_likes = sum(entry['likes'] for entry in time_series)
+
+        return {
+            'time_range': time_range,
+            'time_view': time_view,
+            'total_views': total_views,
+            'total_likes': total_likes,
+            'engagement_rate': round((total_likes / total_views) * 100) if total_views > 0 else 0,
+            'data': time_series
+        }
 
 
 class RecipeReportSerializer(serializers.ModelSerializer):
