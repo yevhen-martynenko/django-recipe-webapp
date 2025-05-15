@@ -379,22 +379,21 @@ class RecipeStatisticsSerializer(serializers.ModelSerializer):
         end_date = timezone.now()
 
         if time_range == 'day':
-            start_date = end_date
+            start_date = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == '3days':
-            start_date = end_date - timedelta(days=3)
+            start_date = (end_date - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == 'week':
-            start_date = end_date - timedelta(days=7)
+            start_date = (end_date - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == 'month':
-            start_date = end_date - timedelta(days=30)
+            start_date = (end_date - timedelta(days=29)).replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == '3months':
-            start_date = end_date - timedelta(days=90)
+            start_date = (end_date - timedelta(days=89)).replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == '6months':
-            start_date = end_date - timedelta(days=180)
+            start_date = (end_date - timedelta(days=179)).replace(hour=0, minute=0, second=0, microsecond=0)
         elif time_range == 'year':
-            start_date = end_date - timedelta(days=365)
+            start_date = (end_date - timedelta(days=364)).replace(hour=0, minute=0, second=0, microsecond=0)
         else:
-            start_date = end_date - timedelta(days=7)
-
+            start_date = (end_date - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
         return start_date, end_date
 
     def _get_trunc_function(self, time_view):
@@ -428,6 +427,20 @@ class RecipeStatisticsSerializer(serializers.ModelSerializer):
         else:
             return date_value.strftime('%Y-%m-%d')
 
+    def _get_aggregated_data(self, obj, model_class, start_date, end_date, trunc_func, date_format):
+        return {
+            self._format_date(item['period'], date_format): item['count']
+            for item in model_class.objects.filter(
+                recipe=obj,
+                timestamp__gte=start_date,
+                timestamp__lte=end_date
+            ).annotate(
+                period=trunc_func('timestamp')
+            ).values('period').annotate(
+                count=Count('id')
+            ).order_by('period')
+        }
+
     def get_time_series_data(self, obj):
         time_range = self.context['request'].query_params.get('time-range', 'week')
         time_view = self.context['request'].query_params.get('time-view', 'day')
@@ -455,7 +468,72 @@ class RecipeStatisticsSerializer(serializers.ModelSerializer):
             count=Count('id')
         ).order_by('period')
 
+        views_dict = {
+            self._get_formatted_date(item['period'], time_view): item['count']
+            for item in views_by_date
+        }
+        likes_dict = {
+            self._get_formatted_date(item['period'], time_view): item['count']
+            for item in likes_by_date
+        }
+
         time_series = []
+
+        if time_view == 'hour':
+            current_date = start_date
+            while current_date <= end_date:
+                date_str = self._get_formatted_date(current_date, time_view)
+                time_series.append({
+                    'period': date_str,
+                    'views': views_dict.get(date_str, 0),
+                    'likes': likes_dict.get(date_str, 0)
+                })
+                current_date += timedelta(hours=1)
+        elif time_view == 'day':
+            current_date = start_date.date()
+            while current_date <= end_date.date():
+                date_str = self._get_formatted_date(current_date, time_view)
+                time_series.append({
+                    'period': date_str,
+                    'views': views_dict.get(date_str, 0),
+                    'likes': likes_dict.get(date_str, 0)
+                })
+                current_date += timedelta(days=1)
+        elif time_view == 'week':
+            current_date = start_date - timedelta(days=start_date.weekday())
+            while current_date <= end_date:
+                date_str = self._get_formatted_date(current_date, time_view)
+                time_series.append({
+                    'period': date_str,
+                    'views': views_dict.get(date_str, 0),
+                    'likes': likes_dict.get(date_str, 0)
+                })
+                current_date += timedelta(weeks=1)
+        elif time_view == 'month':
+            current_date = start_date.replace(day=1)
+            while current_date <= end_date:
+                date_str = self._get_formatted_date(current_date, time_view)
+                time_series.append({
+                    'period': date_str,
+                    'views': views_dict.get(date_str, 0),
+                    'likes': likes_dict.get(date_str, 0)
+                })
+                if current_date.month == 12:
+                    current_date = current_date.replace(year=current_date.year + 1, month=1)
+                else:
+                    current_date = current_date.replace(month=current_date.month + 1)
+        elif time_view == 'year':
+            current_year = start_date.year
+            end_year = end_date.year
+            while current_year <= end_year:
+                current_date = timezone.datetime(current_year, 1, 1)
+                date_str = self._get_formatted_date(current_date, time_view)
+                time_series.append({
+                    'period': date_str,
+                    'views': views_dict.get(date_str, 0),
+                    'likes': likes_dict.get(date_str, 0)
+                })
+                current_year += 1
 
         total_views = sum(entry['views'] for entry in time_series)
         total_likes = sum(entry['likes'] for entry in time_series)
