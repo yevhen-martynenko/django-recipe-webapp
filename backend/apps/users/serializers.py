@@ -8,7 +8,7 @@ from rest_framework import serializers, exceptions
 from rest_framework.reverse import reverse
 from allauth.socialaccount.models import SocialAccount
 
-from .models import User
+from apps.users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):

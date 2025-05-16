@@ -14,9 +14,9 @@ from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authtoken.models import Token
 
-from .models import User, ActivationCode
-from .authentication import TokenAuthentication
-from .serializers import (
+from apps.users.models import User, ActivationCode
+from apps.users.authentication import TokenAuthentication
+from apps.users.serializers import (
     UserSerializer,
     UserProfileSerializer,
     UserPublicProfileSerializer,
@@ -25,12 +25,12 @@ from .serializers import (
     UserLoginSerializer,
     GoogleAuthSerializer,
 )
-from .permissions import (
+from apps.users.permissions import (
     IsOwner,
     IsAdmin,
     IsVerifiedAndNotBanned,
 )
-from .tasks import (
+from apps.users.tasks import (
     send_activation_email,
 )
 
@@ -45,7 +45,7 @@ class UserRegisterView(generics.CreateAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
-    authentication_classes = []
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
@@ -62,6 +62,7 @@ class UserRegisterView(generics.CreateAPIView):
             {
                 'token': token.key,
                 'user': user_serializer.data,
+                'detail': 'User created successfully.',
             },
             status=status.HTTP_201_CREATED,
         )
@@ -249,6 +250,7 @@ class UserLoginView(generics.CreateAPIView):
             {
                 'token': token.key,
                 'user': user_serializer.data,
+                'detail': 'Successfully logged in.',
             },
             status=status.HTTP_200_OK,
         )
@@ -293,7 +295,7 @@ class UserGoogleLoginView(APIView):
             'access_type': 'offline',
             'prompt': 'consent',
         }
-        google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+        google_auth_url = 'https://accounts.google.com/o/oauth2/v2/auth?' + urllib.parse.urlencode(params)
         return Response({'url': google_auth_url})
 
 

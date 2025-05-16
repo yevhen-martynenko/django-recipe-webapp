@@ -8,7 +8,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 
-from .models import ActivationCode
+from apps.users.models import ActivationCode
 
 
 def send_activation_email(user):
@@ -46,5 +46,5 @@ def send_activation_email(user):
         email.send()
     except Exception as e:
         raise e
-        # message.errror(f"Failed to send activation email to {user.email}: {str(e)}")
+        # message.error(f"Failed to send activation email to {user.email}: {str(e)}")
         # logger.error(f"Failed to send activation email to {user.email}: {str(e)}")
