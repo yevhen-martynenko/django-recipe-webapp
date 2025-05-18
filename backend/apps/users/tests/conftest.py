@@ -31,6 +31,7 @@ def api_users_endpoints():
 
     return {
         'list': f'{BASE_ENDPOINT}',
+        'user': f'{BASE_ENDPOINT}view/',
         'me': f'{BASE_ENDPOINT}me/',
         'me_update': f'{BASE_ENDPOINT}me/',
         'me_delete': f'{BASE_ENDPOINT}me/delete/',

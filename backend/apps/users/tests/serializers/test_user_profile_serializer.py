@@ -10,7 +10,7 @@ def test_user_profile_serializer_valid_data(registered_user):
     assert data['email'] == registered_user.email
     assert data['username'] == registered_user.username
     assert 'url' in data
-    assert data['url'].endswith(f'/users/{registered_user.username}/')
+    assert data['url'].endswith(f'/users/view/{registered_user.username}/')
     assert 'date_joined' in data
     assert 'last_login' in data
 

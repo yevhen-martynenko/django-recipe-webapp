@@ -12,7 +12,7 @@ def test_get_user_public_detail(client, api_users_endpoints, registered_user, re
     registered_user.save()
     client.force_authenticate(user=registered_user)
 
-    response = client.get(f'{api_users_endpoints['list']}{registered_user2.username}/')
+    response = client.get(f'{api_users_endpoints['user']}{registered_user2.username}/')
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -30,7 +30,7 @@ def test_get_user_public_detail_user_not_found(client, api_users_endpoints, regi
     registered_user.save()
     client.force_authenticate(user=registered_user)
 
-    response = client.get(f'{api_users_endpoints['list']}user_not_exist/')
+    response = client.get(f'{api_users_endpoints['user']}user_not_exist/')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     data = response.json()
@@ -46,7 +46,7 @@ def test_get_user_public_detail_user_not_verified(client, api_users_endpoints, r
     registered_user.save()
     client.force_authenticate(user=registered_user)
 
-    response = client.get(f'{api_users_endpoints['list']}{registered_user2.username}/')
+    response = client.get(f'{api_users_endpoints['user']}{registered_user2.username}/')
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     data = response.json()
@@ -62,7 +62,7 @@ def test_get_user_public_detail_user_banned(client, api_users_endpoints, registe
     registered_user.save()
     client.force_authenticate(user=registered_user)
 
-    response = client.get(f'{api_users_endpoints['list']}{registered_user2.username}/')
+    response = client.get(f'{api_users_endpoints['user']}{registered_user2.username}/')
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     data = response.json()
@@ -71,7 +71,7 @@ def test_get_user_public_detail_user_banned(client, api_users_endpoints, registe
 
 @pytest.mark.django_db
 def test_get_user_public_detail_user_unauthorized(client, api_users_endpoints):
-    response = client.get(f'{api_users_endpoints['list']}user/')
+    response = client.get(f'{api_users_endpoints['user']}user/')
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     data = response.json()
