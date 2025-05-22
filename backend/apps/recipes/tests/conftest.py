@@ -1,5 +1,7 @@
 import pytest
 import random
+from io import BytesIO
+from PIL import Image
 
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -38,17 +40,36 @@ def auth_client(create_client):
 
 
 @pytest.fixture
+def auth_client_2(create_client):
+    user = create_client()
+    client = APIClient()
+    client.force_authenticate(user=user)
+    return client, user
+
+
+@pytest.fixture
 def generate_recipe_data():
     """
     Return a callable that generates unique recipe data
     """
     def _generate(overrides:dict=None):
         base_title = f"Test Recipe {random.randint(1000, 9999)}"
+
+        image_io = BytesIO()
+        image = Image.new("RGB", (100, 100), color="red")
+        image.save(image_io, format="JPEG")
+        image_io.seek(0)
+
         data = {
             "title": base_title,
             "description": "A test description",
             "status": "draft",
             "source_url": "https://example.com/recipe",
+            "final_image": SimpleUploadedFile(
+                name=f"{base_title}.jpg",
+                content=image_io.read(),
+                content_type="image/jpeg"
+            )
         }
         if overrides:
             data.update(overrides)
