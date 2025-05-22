@@ -204,8 +204,7 @@ class RandomRecipeView(generics.RetrieveAPIView):
 
         if not user.is_authenticated or not user.is_superuser:
             qs = qs.filter(
-                Q(status=RecipeStatus.PUBLISHED) |
-                Q(author=user)
+                Q(status=RecipeStatus.PUBLISHED)
             )
 
         return qs
