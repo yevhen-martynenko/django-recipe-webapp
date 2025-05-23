@@ -80,7 +80,7 @@ def generate_recipe_data():
 @pytest.fixture
 def api_recipe_endpoints():
     BASE_ENDPOINT = 'http://127.0.0.1:8000/api/recipes/'
-    BASE_VIEW_ENDPOINT = f'{BASE_ENDPOINT}view/<slug:slug>/'
+    BASE_VIEW_ENDPOINT = f'{BASE_ENDPOINT}view/'
 
     return {
         'list': f'{BASE_ENDPOINT}',

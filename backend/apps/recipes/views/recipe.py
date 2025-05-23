@@ -237,13 +237,13 @@ class RecipeDetailView(generics.RetrieveAPIView):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [permissions.AllowAny, IsRecipeOwnerOrPublic]
+    permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
 
     def get(self, request, *args, **kwargs):
         recipe = self.get_object()
 
-        if recipe.is_banned and not request.user.is_superuser:
+        if recipe.is_banned and not (request.user.is_superuser or request.user == recipe.author):
             return Response(
                 {
                     'detail': 'This recipe has been flagged as inappropriate and is hidden.'
@@ -262,6 +262,9 @@ class RecipeDetailView(generics.RetrieveAPIView):
         if recipe.status != RecipeStatus.PUBLISHED and not (
             request.user == recipe.author or request.user.is_superuser
         ):
+            raise NotFound(detail='No Recipe matches the given query.')
+
+        if recipe.private and request.user != recipe.author and not request.user.is_superuser:
             raise NotFound(detail='No Recipe matches the given query.')
 
         recipe.add_view(request.user)
