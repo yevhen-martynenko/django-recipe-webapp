@@ -29,7 +29,7 @@ def test_recipe_detail_success(client, auth_client, api_recipe_endpoints, genera
     recipe.save()
 
     response = client.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'
@@ -70,7 +70,7 @@ def test_recipe_detail_success_by_other_user(client, auth_client, auth_client_2,
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'
@@ -107,7 +107,7 @@ def test_recipe_detail_failure_by_other_user(client, auth_client, auth_client_2,
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json().get('detail') == 'No Recipe matches the given query.'
@@ -138,7 +138,7 @@ def test_recipe_detail_success_by_unauthenticated_user(client, auth_client, api_
     unauthorized_client = Client()
 
     response = unauthorized_client.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'
@@ -151,7 +151,7 @@ def test_recipe_detail_non_existing_slug(client, auth_client, api_recipe_endpoin
     user.save()
 
     response = client.get(
-        f"{api_recipe_endpoints['detail']}non-existing-recipe/"
+        api_recipe_endpoints['detail']('non-existing-recipe'),
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json().get('detail') == 'No Recipe matches the given query.'
@@ -183,7 +183,7 @@ def test_recipe_detail_for_banned_recipe(client, auth_client, auth_client_2, api
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json().get('detail') == 'This recipe has been flagged as inappropriate and is hidden.'
@@ -211,7 +211,7 @@ def test_recipe_detail_for_banned_recipe_by_owner(client, auth_client, api_recip
     recipe.save()
 
     response = client.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'
@@ -242,7 +242,7 @@ def test_recipe_detail_for_deleted_recipe(client, auth_client, auth_client_2, ap
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json().get('detail') == 'This recipe has been deleted.'
@@ -274,7 +274,7 @@ def test_recipe_detail_for_draft_recipe(client, auth_client, auth_client_2, api_
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json().get('detail') == 'No Recipe matches the given query.'
@@ -302,7 +302,7 @@ def test_recipe_detail_for_draft_recipe_by_owner(client, auth_client, auth_clien
     recipe.save()
 
     response = client.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'
@@ -335,7 +335,7 @@ def test_recipe_detail_for_private_recipe(client, auth_client, auth_client_2, ap
     user_2.save()
 
     response = client_2.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json().get('detail') == 'No Recipe matches the given query.'
@@ -364,7 +364,7 @@ def test_recipe_detail_for_private_recipe_by_owner(client, auth_client, api_reci
     recipe.save()
 
     response = client.get(
-        f"{api_recipe_endpoints['detail']}{recipe_slug}/"
+        api_recipe_endpoints['detail'](recipe_slug),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get('detail') == 'Recipe retrieved successfully.'

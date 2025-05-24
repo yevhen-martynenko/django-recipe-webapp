@@ -79,39 +79,43 @@ def generate_recipe_data():
 
 @pytest.fixture
 def api_recipe_endpoints():
-    BASE_ENDPOINT = 'http://127.0.0.1:8000/api/recipes/'
-    BASE_VIEW_ENDPOINT = f'{BASE_ENDPOINT}view/'
+    BASE = 'http://127.0.0.1:8000/api/recipes/'
+
+    def with_slug(suffix: str, slug: str = None):
+        return f'{BASE}view/{slug}/{suffix}' if slug else f'{BASE}view/{suffix}'
 
     return {
-        'list': f'{BASE_ENDPOINT}',
-        'admin-list': f'{BASE_ENDPOINT}list/',
-        'create': f'{BASE_ENDPOINT}create/',
-        'random': f'{BASE_ENDPOINT}random/',
-        'deleted': f'{BASE_ENDPOINT}deleted/',
+        'list': f'{BASE}',
+        'admin-list': f'{BASE}list/',
+        'create': f'{BASE}create/',
+        'random': f'{BASE}random/',
+        'deleted': f'{BASE}deleted/',
 
-        'detail': f'{BASE_VIEW_ENDPOINT}',
-        'update': f'{BASE_VIEW_ENDPOINT}update/',
-        'delete': f'{BASE_VIEW_ENDPOINT}delete/',
-        'restore': f'{BASE_VIEW_ENDPOINT}restore/',
-        'export': f'{BASE_VIEW_ENDPOINT}export/',
-        'report': f'{BASE_VIEW_ENDPOINT}report/',
-        'ban': f'{BASE_VIEW_ENDPOINT}ban/',
-        'like': f'{BASE_VIEW_ENDPOINT}like/',
-        'statistics': f'{BASE_VIEW_ENDPOINT}statistics/',
+        'detail': lambda slug=None: with_slug('', slug),
+        'update': lambda slug=None: with_slug('update/', slug),
+        'delete': lambda slug=None: with_slug('delete/', slug),
+        'restore': lambda slug=None: with_slug('restore/', slug),
+        'export': lambda slug=None: with_slug('export/', slug),
+        'report': lambda slug=None: with_slug('report/', slug),
+        'ban': lambda slug=None: with_slug('ban/', slug),
+        'like': lambda slug=None: with_slug('like/', slug),
+        'statistics': lambda slug=None: with_slug('statistics/', slug),
     }
 
 
 @pytest.fixture
 def api_tag_endpoints():
-    BASE_ENDPOINT = 'http://127.0.0.1:8000/api/tags/'
-    BASE_VIEW_ENDPOINT = f'{BASE_ENDPOINT}view/<slug:slug>/'
+    BASE = 'http://127.0.0.1:8000/api/tags/'
+
+    def with_slug(suffix: str, slug: str = None):
+        return f'{BASE}view/{slug}/{suffix}' if slug else f'{BASE}view/{suffix}'
 
     return {
-        'list': f'{BASE_ENDPOINT}',
-        'create': f'{BASE_ENDPOINT}create/',
+        'list': f'{BASE}',
+        'create': f'{BASE}create/',
 
-        'detail': f'{BASE_VIEW_ENDPOINT}',
-        'update': f'{BASE_VIEW_ENDPOINT}update/',
-        'delete': f'{BASE_VIEW_ENDPOINT}delete/',
-        'suggest': f'{BASE_VIEW_ENDPOINT}suggest/',
+        'detail': lambda slug=None: with_slug('', slug),
+        'update': lambda slug=None: with_slug('update/', slug),
+        'delete': lambda slug=None: with_slug('delete/', slug),
+        'suggest': lambda slug=None: with_slug('suggest/', slug),
     }
