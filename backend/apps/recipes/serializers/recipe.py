@@ -142,7 +142,7 @@ class RecipeSerializer(BaseSerializer):
             'final_image',
             'source_url',
             'tags',
-            'private',
+            'is_private',
 
             'calories',
             'protein',
@@ -212,7 +212,7 @@ class RecipeAdminSerializer(BaseSerializer):
             'final_image',
             'source_url',
             'tags',
-            'private',
+            'is_private',
 
             'is_banned',
             'is_featured',
@@ -270,7 +270,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'final_image',
             'source_url',
             'tags',
-            'private',
+            'is_private',
         ]
 
     def validate_title(self, value):

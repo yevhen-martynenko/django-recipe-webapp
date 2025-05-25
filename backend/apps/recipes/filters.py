@@ -91,7 +91,7 @@ class RecipeAdminFilter(BaseRecipeFilter):
             'is_deleted',
             'is_featured',
             'is_banned',
-            'private',
+            'is_private',
             'status',
 
             'created_at',

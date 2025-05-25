@@ -68,7 +68,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'calories', 'protein', 'fat', 'carbs',
         'created_at', 'updated_at', 'published_at',
         'is_deleted', 'deleted_at',
-        'private', 'views_count', 'likes_count',
+        'is_private', 'views_count', 'likes_count',
     )
     actions = (
         make_banned,
@@ -99,7 +99,7 @@ class RecipeAdmin(admin.ModelAdmin):
         ('Status & SEO', {
             'fields': (
                 'status',
-                'private',
+                'is_private',
                 'is_banned',
                 'is_featured',
                 'is_deleted',

@@ -62,7 +62,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, related_name='recipes', blank=True)
 
     # Status
-    private = models.BooleanField(default=False)
+    is_private = models.BooleanField(default=False)
     is_banned = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
