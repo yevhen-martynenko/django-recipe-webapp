@@ -4,7 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.text import slugify
-from django.core.exceptions import ValidationError
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -361,12 +361,6 @@ class RecipeReport(models.Model):
 
     def __str__(self):
         return f'Report on "{self.recipe.title}" by "{self.user}"'
-
-    def clean(self):
-        super().clean()
-
-        if len(self.reason.strip()) < 10:
-            raise ValidationError({'reason': 'Please provide a more detailed reason.'})
 
     def save(self, *args, **kwargs):
         self.full_clean()

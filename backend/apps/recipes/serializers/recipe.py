@@ -338,6 +338,12 @@ class RecipeRestoreSerializer(serializers.ModelSerializer):
         fields = ['is_deleted', 'deleted_at']
         read_only_fields = fields
 
+    def update(self, instance, validated_data):
+        instance.is_deleted = False
+        instance.deleted_at = None
+        instance.save(update_fields=['is_deleted', 'deleted_at'])
+        return instance
+
 
 class RecipeBanSerializer(RecipeAdminSerializer):
     is_banned = serializers.BooleanField()
@@ -572,3 +578,8 @@ class RecipeReportSerializer(serializers.ModelSerializer):
 
             'created_at',
         ]
+
+    def validate_reason(self, value):
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError('Please provide a more detailed reason.')
+        return value

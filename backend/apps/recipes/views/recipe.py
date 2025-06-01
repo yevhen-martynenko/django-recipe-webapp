@@ -264,7 +264,7 @@ class RecipeDetailView(generics.RetrieveAPIView):
         ):
             raise NotFound(detail='No Recipe matches the given query.')
 
-        if recipe.private and request.user != recipe.author and not request.user.is_superuser:
+        if recipe.is_private and request.user != recipe.author and not request.user.is_superuser:
             raise NotFound(detail='No Recipe matches the given query.')
 
         recipe.add_view(request.user)
@@ -323,7 +323,7 @@ class RecipeDeleteView(generics.DestroyAPIView):
 
     def perform_destroy(self, instance):
         if instance.is_deleted:
-            raise ValidationError('Recipe is already deleted.')
+            raise ValidationError({'detail': 'This recipe has already been deleted.'})
 
         instance.delete()
 
@@ -331,12 +331,7 @@ class RecipeDeleteView(generics.DestroyAPIView):
         recipe = self.get_object()
         self.perform_destroy(recipe)
 
-        return Response(
-            {
-                'detail': 'Recipe deleted successfully.'
-            },
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DeletedRecipeListView(generics.ListAPIView):
@@ -365,17 +360,30 @@ class RecipeRestoreView(generics.UpdateAPIView):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        return Recipe.objects.filter(is_deleted=True, author=self.request.user)
+        return Recipe.objects.filter(author=self.request.user)
 
     def update(self, request, *args, **kwargs):
         recipe = self.get_object()
 
-        recipe.is_deleted = False
-        recipe.deleted_at = None
-        recipe.save(update_fields=['is_deleted', 'deleted_at'])
+        if not recipe.is_deleted:
+            return Response(
+                {
+                    'detail': 'This recipe has not been deleted.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data)
+        serializer = self.get_serializer(recipe, data={}, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {
+                'detail': 'Recipe has been restored.',
+                'recipe': serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class RecipeExportView(generics.RetrieveAPIView):
