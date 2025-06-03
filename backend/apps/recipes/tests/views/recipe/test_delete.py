@@ -58,7 +58,7 @@ def test_delete_recipe_failure_already_deleted(verified_user_with_recipe, api_re
         api_recipe_endpoints['delete'](slug=recipe.slug),
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    recepe.refresh_from_db()
+    recipe.refresh_from_db()
 
     response = client.delete(
         api_recipe_endpoints['delete'](slug=recipe.slug),
