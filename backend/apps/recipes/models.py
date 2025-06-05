@@ -36,6 +36,65 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
 
+class TagSuggestion(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    suggested_name = models.CharField(max_length=64)
+    description = models.TextField(blank=True, null=True)
+    suggested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tag_suggestions')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
+    created_tag = models.OneToOneField(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_tag_suggestions')
+    review_notes = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['suggested_name', 'suggested_by']
+        indexes = [
+            models.Index(fields=['status'], name='tag_suggestion_status_idx'),
+            models.Index(fields=['created_at'], name='tag_suggestion_created_idx'),
+        ]
+
+    def __str__(self):
+        return f"Suggestion: '{self.suggested_name}' by {self.suggested_by.username} ({self.status})"
+
+    def approve_and_create_tag(self, reviewed_by_user):
+        """Approve suggestion and create the actual tag"""
+        if self.status != 'pending':
+            raise ValueError('Can only approve pending suggestions')
+
+        if Tag.objects.filter(name__iexact=self.suggested_name).exists():
+            raise ValueError('Tag with this name already exists')
+
+        tag = Tag.objects.create(name=self.suggested_name.lower().strip())
+
+        self.status = 'approved'
+        self.created_tag = tag
+        self.reviewed_by = reviewed_by_user
+        self.save()
+
+        return tag
+
+    def reject(self, reviewed_by_user, notes=""):
+        """Reject the suggestion"""
+        if self.status != 'pending':
+            raise ValueError('Can only reject pending suggestions')
+
+        self.status = 'rejected'
+        self.reviewed_by = reviewed_by_user
+        self.review_notes = notes
+        self.save()
+
+
 class RecipeStatus(models.TextChoices):
     DRAFT = 'draft', 'Draft'
     PUBLISHED = 'published', 'Published'
@@ -153,7 +212,7 @@ class RecipeSpecialBlock(models.Model):
     TIMES = 'times'
     CALORIES = 'calories'
     MACRONUTRIENTS = 'macronutrients'
-    
+
     BLOCK_TYPE_CHOICES = [
         (INGREDIENTS, 'Ingredients List'),
         (TIMES, 'Preparation & Cooking Time'),
