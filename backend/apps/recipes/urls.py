@@ -23,7 +23,7 @@ from apps.recipes.views.tag import (
     tag_detail_view,
     tag_update_view,
     tag_delete_view,
-    tag_suggest_view,
+    tag_suggestion_create_view,
 )
 
 
@@ -51,12 +51,12 @@ urlpatterns = [
     path('tags/', include([
         path('', tag_list_view, name='tag-list'),
         path('create/', tag_create_view, name='tag-create'),
+        path('suggest/', tag_suggestion_create_view, name='tag-suggestion-create'),
 
         path('view/<slug:slug>/', include([
             path('', tag_detail_view, name='tag-detail'),
             path('update/', tag_update_view, name='tag-update'),
             path('delete/', tag_delete_view, name='tag-delete'),
-            path('suggest/', tag_suggest_view, name='tag-suggest'),
         ])),
     ])),
 ]

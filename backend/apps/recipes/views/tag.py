@@ -9,9 +9,11 @@ from apps.users.permissions import (
 )
 from apps.recipes.models import (
     Tag,
+    TagSuggestion,
 )
 from apps.recipes.serializers.tag import (
     TagSerializer,
+    TagSuggestionCreateSerializer,
 )
 
 
@@ -50,11 +52,16 @@ class TagDeleteView(generics.DestroyAPIView):
     pass
 
 
-class TagSuggestView(generics.ListAPIView):
+class TagSuggestionCreateView(generics.CreateAPIView):
     """
-    Suggest tags
+    View for users to suggest new tags
     """
-    pass
+    queryset = TagSuggestion.objects.all()
+    serializer_class = TagSuggestionCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(suggested_by=self.request.user)
 
 
 tag_create_view = TagCreateView.as_view()
@@ -62,4 +69,4 @@ tag_list_view = TagListView.as_view()
 tag_detail_view = TagDetailView.as_view()
 tag_update_view = TagUpdateView.as_view()
 tag_delete_view = TagDeleteView.as_view()
-tag_suggest_view = TagSuggestView.as_view()
+tag_suggestion_create_view = TagSuggestionCreateView.as_view()
