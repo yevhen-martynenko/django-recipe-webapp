@@ -7,6 +7,7 @@ from apps.recipes.models import (
     RecipeSpecialBlock,
     RecipeReport,
     Tag,
+    TagSuggestion,
 )
 
 
@@ -176,3 +177,29 @@ class TagAdmin(admin.ModelAdmin):
         if not obj.slug or change:
             obj.slug = slugify(obj.name)
         super().save_model(request, obj, form, change)
+
+
+@admin.register(TagSuggestion)
+class TagSuggestionAdmin(admin.ModelAdmin):
+    list_display = ('suggested_name', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('suggested_name', 'description')
+    readonly_fields = ('id', 'suggested_by', 'created_tag', 'created_at', 'updated_at')
+    ordering = ('-created_at',)
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'id',
+                'suggested_name',
+                'description',
+                'status',
+                'suggested_by',
+                'reviewed_by',
+                'created_tag',
+                'review_notes',
+                'created_at',
+                'updated_at',
+            )
+        }),
+    )
