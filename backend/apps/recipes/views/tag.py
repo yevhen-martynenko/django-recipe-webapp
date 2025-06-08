@@ -20,8 +20,27 @@ from apps.recipes.serializers.tag import (
 class TagCreateView(generics.CreateAPIView):
     """
     Create a new tag
+
+    Creates a new tag associated with the authenticated user.
     """
-    pass
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsVerifiedAndNotBanned]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        tag = serializer.save()
+
+        return Response(
+            {
+                'tag': TagSerializer(tag, context={'request': request}).data,
+                'detail': 'Tag created successfully.',
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class TagListView(generics.ListAPIView):
