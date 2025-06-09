@@ -47,7 +47,9 @@ class TagListView(generics.ListAPIView):
     """
     List all tags
     """
-    pass
+    queryset = Tag.objects.all()
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = TagSerializer
 
 
 class TagDetailView(generics.RetrieveAPIView):
