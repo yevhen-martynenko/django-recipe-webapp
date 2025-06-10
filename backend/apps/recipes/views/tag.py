@@ -70,7 +70,15 @@ class TagDeleteView(generics.DestroyAPIView):
     """
     Delete a tag
     """
-    pass
+    queryset = Tag.objects.all()
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    lookup_field = 'slug'
+
+    def delete(self, request, *args, **kwargs):
+        tag = self.get_object()
+        tag.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagSuggestionCreateView(generics.CreateAPIView):
