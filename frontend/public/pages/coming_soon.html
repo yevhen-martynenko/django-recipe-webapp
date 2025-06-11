@@ -13,7 +13,7 @@
   <div class="coming-soon__overlay"></div>
   <section class="coming-soon__container">
     <h1 class="coming-soon__title">Coming Soon</h1>
-    <p class="coming-soon__subtitle">TODO:We're working hard to bring you something amazing. Stay tuned!</p>
+    <p class="coming-soon__subtitle">We're working hard to bring you something amazing. Stay tuned!</p>
 
     <div
       class="coming-soon__countdown"
@@ -56,9 +56,9 @@
 
     <nav class="coming-soon__social" aria-label="Social media links">
       <ul class="coming-soon__social-list">
-        {% for platform, url in social_media_urls %}
-          <li><a href="{{ url }}" target="_blank" aria-label="{{ platform }}" class="coming-soon__social-link"><!-- {{ platform }} Icon --></a></li>
-        {% endfor %}
+      {% for platform, url in social_media_urls %}
+        <li><a href="{{ url }}" target="_blank" aria-label="{{ platform }}" class="coming-soon__social-link"></a></li>
+      {% endfor %}
       </ul>
     </nav>
   </section>
