@@ -1,0 +1,219 @@
+@use "../main.scss" as *;
+@use "../base/variables.scss" as *;
+@use "../base/mixins.scss" as *;
+
+
+@keyframes fade_in_up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.sitemap {
+    min-height: 100vh;
+    padding: 3rem 0;
+    background-color: $color-white;
+
+    &-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        
+        @media (max-width: $breakpoint-lg) {
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: $breakpoint-sm) {
+            grid-template-columns: 1fr;
+            padding: 0 1rem;
+        }
+    }
+
+    &__section {
+        background: $color-white;
+        border-radius: ($radius * 1.5);
+        padding: 2rem;
+        border: 1px solid $color-border;
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fade_in_up 0.6s ease forwards;
+
+        &:nth-child(1) { animation-delay: 0.1s; }
+        &:nth-child(2) { animation-delay: 0.2s; }
+        &:nth-child(3) { animation-delay: 0.3s; }
+        &:nth-child(4) { animation-delay: 0.4s; }
+        &:nth-child(5) { animation-delay: 0.5s; }
+        &:nth-child(6) { animation-delay: 0.6s; }
+        &:nth-child(7) { animation-delay: 0.7s; }
+        &:nth-child(8) { animation-delay: 0.8s; }
+        &:nth-child(9) { animation-delay: 0.9s; }
+        &:nth-child(10) { animation-delay: 1s; }
+        
+        &:hover {
+            border-color: $color-primary;
+        }
+        
+        &-title {
+            font-family: $font-heading;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: $color-text;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid $color-accent;
+            position: relative;
+        }
+    }
+
+    &__list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    &__item {
+    }
+
+    &__link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: $color-accent;
+        border: 1px solid transparent;
+        border-radius: $radius;
+        font-family: $font-body;
+        color: $color-text;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        
+        &:hover {
+            background: $color-white;
+            border-color: $color-primary;
+            color: $color-primary;
+            text-decoration: none;
+        }
+        
+        &-text {
+            flex: 1;
+        }
+    }
+
+    &__badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: ($radius * 2.5);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-family: $font-body;
+        
+        &--main { 
+            background: $color-1;
+            color: $color-white;
+        }
+        
+        &--auth { 
+            background: $color-2;
+            color: $color-white;
+        }
+        
+        &--user { 
+            background: $color-3;
+            color: $color-white;
+        }
+        
+        &--recipe { 
+            background: $color-4;
+            color: $color-white;
+        }
+
+        &--tag {
+            background: $color-5;
+            color: $color-white;
+        }
+        
+        &--misc { 
+            background: $color-6;
+            color: $color-white;
+        }
+    }
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+    
+    &__title {
+        font-family: $font-heading;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: $color-text;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+    
+    &__subtitle {
+        font-family: $font-body;
+        font-size: 1.25rem;
+        color: $color-muted;
+        font-weight: 400;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.5;
+    }
+}
+
+
+@media (max-width: $breakpoint-md) {
+    .sitemap {
+        padding: 2rem 0;
+        
+        &__section {
+            padding: 1.5rem;
+            
+            &-title {
+                font-size: 1.3rem;
+            }
+        }
+        
+        &__item {
+            padding: 0.8rem;
+        }
+    }
+}
+
+@media (max-width: $breakpoint-sm) {
+    .header {
+        margin-bottom: 2rem;
+    }
+    
+    .sitemap {
+        &__section {
+            &:hover {
+                transform: translateY(-2px);
+            }
+        }
+        
+        &__item {
+            &:hover {
+                transform: translateX(4px);
+            }
+        }
+    }
+}
