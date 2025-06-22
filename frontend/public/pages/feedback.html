@@ -9,7 +9,7 @@
 
 
 {% block content %}
-<div class="container">
+<div class="container-small">
     <main class="feedback" role="main">
         <h1 class="feedback-title">Submit Your Feedback</h1>
         
@@ -19,15 +19,15 @@
                 Thank you! Your feedback has been submitted successfully.
             </div>
 
-            <form id="feedback-form" novalidate>
+            <form id="feedback-form form" novalidate>
                 <div class="feedback-form__field">
-                    <label for="feedback-type" class="feedback-form__label">
+                    <label for="feedback-type" class="feedback-form__label form__label">
                         Feedback Type
                     </label>
                     <select 
                         id="feedback-type" 
-                        name="feedbackType" 
-                        class="feedback-form__select" 
+                        name="feedback_type" 
+                        class="form__field form__select" 
                         required aria-describedby="feedback-type-error"
                     >
                         <option value="" disabled selected>Select Type</option>
@@ -40,14 +40,14 @@
                 </div>
 
                 <div class="feedback-form__field">
-                    <label for="feedback-subject" class="feedback-form__label">
+                    <label for="feedback-subject" class="feedback-form__label form__label">
                         Subject
                     </label>
                     <input 
                         type="text" 
                         id="feedback-subject" 
                         name="subject" 
-                        class="feedback-form__input"
+                        class="feedback-form__input form__field"
                         placeholder="Brief summary of your feedback"
                         required
                         maxlength="100"
@@ -57,13 +57,13 @@
                 </div>
 
                 <div class="feedback-form__field">
-                    <label for="feedback-message" class="feedback-form__label">
+                    <label for="feedback-message" class="feedback-form__label form__label">
                         Message
                     </label>
                     <textarea 
                         id="feedback-message" 
                         name="message" 
-                        class="feedback-form__textarea"
+                        class="feedback-form__textarea form__field"
                         placeholder="Detailed feedback..."required
                         maxlength="1000"
                         aria-describedby="feedback-message-error"
@@ -72,14 +72,14 @@
                 </div>
 
                 <div class="feedback-form__field">
-                    <label for="contact-email" class="feedback-form__label optional">
+                    <label for="contact-email" class="feedback-form__label form__label optional">
                         Contact Email
                     </label>
                     <input 
                         type="email" 
                         id="contact-email" 
                         name="email" 
-                        class="feedback-form__input"
+                        class="feedback-form__input form__field"
                         placeholder="your@email.com"
                         aria-describedby="contact-email-error"
                     >
@@ -88,7 +88,7 @@
 
                 <button 
                     type="submit" 
-                    class="btn feedback-form__button"
+                    class="btn"
                     id="submit-button"
                 >
                     Submit Feedback
