@@ -2,15 +2,43 @@
 
 
 // ----------------------------------------------
+// Container
+// ----------------------------------------------
+.container {
+  max-width: 80dvw;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.container-small {
+  max-width: 600px;
+  padding-top: 2.5vh;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.container-centered {
+  max-width: 600px;
+  padding: 0 1rem;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+
+// ----------------------------------------------
 // Button
 // ----------------------------------------------
 .btn {
   padding: 0.9rem 1.8rem;
+  width: 100%;
   background-color: $color-primary;
   color: $color-white;
   font-size: 1.25rem;
   font-family: $font-heading;
   font-weight: 600;
+  text-decoration: none;
   border: none;
   border-radius: $radius;
   cursor: pointer;
@@ -24,6 +52,8 @@
   &:hover {
     background-color: color-mix(in srgb, $color-primary, black 10%);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    border: none;
+    text-decoration: none;
   }
 
   &:active {
@@ -32,7 +62,7 @@
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.4);
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.25);
   }
 
   &:disabled {
@@ -125,14 +155,18 @@
   &__label {
     font-size: 1rem;
     font-weight: 600;
+    margin-bottom: 0.5rem;
   }
 
-  &__input {
+  &__field {
+    width: 100%;
     padding: 0.75rem;
     border: 1px solid $color-border;
     border-radius: $radius;
+    font-family: $font-body;
     font-size: 1rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: $color-white;
+    transition: $transition;
 
     &::placeholder {
       color: $color-placeholder;
@@ -154,6 +188,36 @@
     font-size: 0.875rem;
   }
 
+  &__select {
+    @extend .form__field;
+
+    cursor: pointer;
+    background-color: $color-white;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid $color-border;
+    border-radius: 0.5rem;
+    transition: border-color 0.3s ease;
+
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' stroke='%23343a40' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+
+    &:focus,
+    &:focus-within {
+      border-color: $color-primary;
+      outline: none;
+      box-shadow: none;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+    }
+
+    &::picker-icon {
+      display: none;
+    }
+  }
+
   &__link {
     font-size: 0.875rem;
     color: $color-primary;
@@ -166,11 +230,87 @@
   }
 }
 
+select,
+::picker(select) {
+  appearance: base-select;
+}
+
+::picker(select) {
+  border: none;
+}
+
+select.form__select {
+  option:first-of-type {
+    border-radius: 4px 4px 0 0;
+    border-top: $border-select;
+  }
+  
+  option:last-of-type {
+    border-radius: 0 0 4px 4px;
+    border-bottom: $border-select;
+  }
+  
+  option {
+    display: flex;
+    cursor: pointer;
+    justify-content: flex-start;
+    gap: 16px;
+    background: $color-white;
+    padding: 4px;
+    transition: 0.4s;
+    border-right: $border-select;
+    border-left: $border-select;
+    
+    &:hover {
+      background: $color-placeholder;
+    }
+
+    &:focus {
+      border-color: $color-primary;
+      outline: none;
+    }
+    
+    &:checked {
+      font-weight: bold;
+      background: $color-primary;
+      color: $color-white;
+    }
+  }
+}
+
 
 // ----------------------------------------------
 // Misc
 // ----------------------------------------------
-.required {
+.required::after {
+  content: '*';
   color: $color-danger;
-  font-weight: 600;
+  margin-left: 0.1rem;
+}
+
+.optional::after {
+  content: ' (Optional)';
+  color: $color-placeholder;
+  margin-left: 0.1rem;
+}
+
+
+.heart-icon {
+  width: 100%;
+  height: 100%;
+  max-width: 2.5rem;
+  max-height: 2.5rem;
+  display: inline-block;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-image: url("@images/icons/heart.outlined.svg");
+  transition: background-image 0.2s ease;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &.liked {
+    background-image: url("@images/icons/heart.filled.svg");
+  }
 }
