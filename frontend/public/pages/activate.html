@@ -1,0 +1,53 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% asset_tags 'activate.css' %}">
+{% endblock page_styles %}
+
+
+{% block content %}
+<div class="container-small">
+    <main class="activation activation--loading" id="activationContainer" role="main" aria-live="polite">
+        <div class="activation__icon">
+            <div class="spinner" id="loadingSpinner" aria-label="Loading"></div>
+            <div class="status-icon status-icon--success hidden" id="successIcon" aria-label="Success">
+                ✓
+            </div>
+            <div class="status-icon status-icon--error hidden" id="errorIcon" aria-label="Error">
+                ✕
+            </div>
+            <div class="status-icon status-icon--warning hidden" id="warningIcon" aria-label="Warning">
+                ⚠
+            </div>
+        </div>
+
+        <h1 class="activation__title" id="activationTitle">
+            Activating Your Account
+        </h1>
+
+        <p class="activation__message" id="activationMessage">
+            Please wait while we verify your activation link...
+        </p>
+
+        <div class="activation__actions hidden" id="activationActions">
+            <a href="/login" class="button button--primary" id="loginButton">
+                Go to Login
+            </a>
+            <a href="/register" class="button button--secondary" id="registerButton">
+                Register Again
+            </a>
+            <button type="button" class="button button--secondary" id="resendButton">
+                Resend Link
+            </button>
+        </div>
+    </main>
+</div>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'activate.js' %}"></script>
+{% endblock page_scripts %}
