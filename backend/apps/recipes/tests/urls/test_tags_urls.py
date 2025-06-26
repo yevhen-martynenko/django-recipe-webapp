@@ -9,7 +9,7 @@ from apps.recipes.views.tag import (
     tag_detail_view,
     tag_update_view,
     tag_delete_view,
-    tag_suggest_view,
+    tag_suggestion_create_view,
 )
 
 
@@ -18,11 +18,11 @@ from apps.recipes.views.tag import (
     [
         ('tag-list', None, tag_list_view),
         ('tag-create', None, tag_create_view),
-        
+
         ('tag-detail', {'slug': 'test-slug'}, tag_detail_view),
         ('tag-update', {'slug': 'test-slug'}, tag_update_view),
         ('tag-delete', {'slug': 'test-slug'}, tag_delete_view),
-        ('tag-suggest', {'slug': 'test-slug'}, tag_suggest_view),
+        ('tag-suggestion-create', None, tag_suggestion_create_view),
     ]
 )
 def test_tag_urls_resolve_correct_view(name, kwargs, view):
