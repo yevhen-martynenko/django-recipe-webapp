@@ -1,0 +1,12 @@
+# prod
+Django
+django-environ
+djangorestframework
+django-allauth
+django-filter
+jwt
+
+# dev
+requests
+pytest
+pytest-django
