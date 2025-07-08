@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.throttling import AnonRateThrottle
 
 from apps.users.models import User, ActivationCode
 from apps.users.authentication import TokenAuthentication
@@ -24,6 +25,7 @@ from apps.users.serializers import (
     UserUpdateSerializer,
     UserLoginSerializer,
     GoogleAuthSerializer,
+    PasswordResetSerializer,
 )
 from apps.users.permissions import (
     IsOwner,
@@ -32,6 +34,7 @@ from apps.users.permissions import (
 )
 from apps.users.tasks import (
     send_activation_email,
+    send_password_reset_email,
 )
 
 
@@ -327,6 +330,32 @@ class UserGoogleLoginCallbackView(APIView):
         return redirect(redirect_url)
 
 
+class UserPasswordResetView(generics.CreateAPIView):
+    """
+    Password Reset
+
+    Sends a password reset email to the user
+    """
+    serializer_class = PasswordResetSerializer
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        send_password_reset_email(user=user)
+
+        return Response(
+            {
+                'detail': 'Password reset email sent successfully.',
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
 user_register_view = UserRegisterView.as_view()
 user_activate_view = UserActivateView.as_view()
 user_list_view = UserListView.as_view()
@@ -337,3 +366,4 @@ user_login_view = UserLoginView.as_view()
 user_logout_view = UserLogoutView.as_view()
 user_google_login_view = UserGoogleLoginView.as_view()
 user_google_login_callback_view = UserGoogleLoginCallbackView.as_view()
+user_password_reset_view = UserPasswordResetView.as_view()
