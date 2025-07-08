@@ -296,3 +296,23 @@ class GoogleAuthSerializer(serializers.Serializer):
         )
 
         return user
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value, is_active=True)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('No active user found with this email.')
+        return value
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        try:
+            user = User.objects.get(email=email, is_active=True)
+            attrs['user'] = user
+        except User.DoesNotExist:
+            raise serializers.ValidationError('No active user found with this email.')
+        return attrs
