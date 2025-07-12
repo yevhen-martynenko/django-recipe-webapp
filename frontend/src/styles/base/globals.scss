@@ -1,6 +1,5 @@
 @use "variables.scss" as *;
 
-
 // ----------------------------------------------
 // Container
 // ----------------------------------------------
@@ -26,6 +25,26 @@
   align-items: center;
 }
 
+// ----------------------------------------------
+// Page
+// ----------------------------------------------
+.page {
+  &-title {
+    font-size: 2rem;
+    font-family: $font-heading;
+    color: $color-text;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &-subtitle {
+    font-size: 1rem;
+    font-family: $font-heading;
+    color: $color-muted;
+    font-weight: 400;
+    text-align: center;
+  }
+}
 
 // ----------------------------------------------
 // Button
@@ -46,7 +65,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
-  letter-spacing: 0.25rem;
+  letter-spacing: 0.15rem;
   word-spacing: 0.5rem;
 
   &:hover {
@@ -70,8 +89,13 @@
     cursor: not-allowed;
     opacity: 0.7;
   }
-}
 
+  &--disabled {
+    background-color: color-mix(in srgb, $color-primary, white 20%);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
 
 // ----------------------------------------------
 // Checkbox
@@ -108,7 +132,7 @@
     bottom: 1px;
 
     &:after {
-      content: '';
+      content: "";
       position: absolute;
       top: 1px;
       left: 5px;
@@ -144,7 +168,6 @@
   }
 }
 
-
 // ----------------------------------------------
 // Form
 // ----------------------------------------------
@@ -166,7 +189,7 @@
     font-family: $font-body;
     font-size: 1rem;
     background: $color-white;
-    transition: $transition;
+    transition: all $transition;
 
     &::placeholder {
       color: $color-placeholder;
@@ -178,6 +201,19 @@
       border-color: $color-primary;
       box-shadow: 0 0 0 3px rgba($color-primary, 0.25);
       background-color: $color-white;
+    }
+
+    &--error,
+    &.form__field--interacted:invalid:not(:placeholder-shown) {
+      border-color: $color-error;
+      box-shadow: 0 0 0 3px rgba($color-error, 0.25);
+    }
+
+    &-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
   }
 
@@ -228,6 +264,71 @@
       text-decoration: underline;
     }
   }
+
+  &__icon {
+    min-width: 2rem;
+    min-height: 2rem;
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: $color-muted;
+    transition: color $transition;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: $color-text;
+      outline: none;
+      border-color: $color-primary;
+      border-radius: 2px;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.5);
+      background-color: $color-white;
+    }
+
+    &:focus {
+      outline: 1px solid $color-primary;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    .form__icon--eye-open,
+    .form__icon--eye-closed {
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      background-color: $color-muted;
+      transition: background-color $transition;
+    }
+
+    &--eye-open {
+      background-color: $color-muted;
+      mask: url("@icons/eye-open.svg") no-repeat center;
+      mask-size: contain;
+      -webkit-mask: url("@icons/eye-open.svg") no-repeat center;
+      -webkit-mask-size: contain;
+    }
+
+    &--eye-closed {
+      background-color: $color-muted;
+      mask: url("@icons/eye-closed.svg") no-repeat center;
+      mask-size: contain;
+      -webkit-mask: url("@icons/eye-closed.svg") no-repeat center;
+      -webkit-mask-size: contain;
+    }
+
+    &:hover .form__icon--eye-open,
+    &:hover .form__icon--eye-closed {
+      background-color: $color-text;
+    }
+  }
+
+  &--spaced {
+    margin-bottom: 1.5rem;
+  }
 }
 
 select,
@@ -244,12 +345,12 @@ select.form__select {
     border-radius: 4px 4px 0 0;
     border-top: $border-select;
   }
-  
+
   option:last-of-type {
     border-radius: 0 0 4px 4px;
     border-bottom: $border-select;
   }
-  
+
   option {
     display: flex;
     cursor: pointer;
@@ -260,7 +361,7 @@ select.form__select {
     transition: 0.4s;
     border-right: $border-select;
     border-left: $border-select;
-    
+
     &:hover {
       background: $color-placeholder;
     }
@@ -269,7 +370,7 @@ select.form__select {
       border-color: $color-primary;
       outline: none;
     }
-    
+
     &:checked {
       font-weight: bold;
       background: $color-primary;
@@ -278,22 +379,20 @@ select.form__select {
   }
 }
 
-
 // ----------------------------------------------
 // Misc
 // ----------------------------------------------
 .required::after {
-  content: '*';
+  content: "*";
   color: $color-danger;
   margin-left: 0.1rem;
 }
 
 .optional::after {
-  content: ' (Optional)';
+  content: " (Optional)";
   color: $color-placeholder;
   margin-left: 0.1rem;
 }
-
 
 .heart-icon {
   width: 100%;
