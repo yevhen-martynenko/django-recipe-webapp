@@ -1,0 +1,294 @@
+@use "../base/variables.scss" as *;
+@use "sass:color";
+
+.recipe {
+  &-create {
+
+  }
+
+  &__form {
+
+  }
+}
+
+.tag {
+  background: color.scale($color-primary, $lightness: 50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.95em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &__remove {
+    cursor: pointer;
+    margin-left: 0.25rem;
+  }
+
+  &__container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+// ----------------------------------------------
+// Recipe Header
+// ----------------------------------------------
+.recipe-header {
+  background: $color-white;
+  border-bottom: $border;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  &__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  &__text {
+    flex: 1;
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: $color-text;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    font-family: $font-body;
+    font-size: 1.125rem;
+    color: $color-muted;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    line-height: 1;
+    white-space: nowrap;
+    min-width: 120px;
+    height: 40px;
+    box-sizing: border-box;
+  }
+}
+
+.btn__icon {
+  width: 1.5em;
+  height: 1.5em;
+  display: block;
+  flex-shrink: 0;
+}
+
+// ----------------------------------------------
+// Recipe Section
+// ----------------------------------------------
+.recipe-section {
+  background: $color-white;
+  border-radius: $radius;
+  border: $border;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 2rem;
+
+  &__header {
+    background: color.scale($color-primary, $lightness: 95%);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid color.scale($color-border, $lightness: 5%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: $color-primary;
+    }
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: $color-text;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__content {
+    padding: 2rem;
+  }
+
+  &__buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: $radius;
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+
+    &:hover {
+      background: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    img {
+      width: 1.25rem;
+      height: 1.25rem;
+      object-fit: contain;
+    }
+  }
+}
+
+// ----------------------------------------------
+// Recipe Block
+// ----------------------------------------------
+.recipe-block {
+  margin-bottom: 3rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  &__icon {
+    color: $color-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: color.scale($color-primary, $lightness: 90%);
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  &__title {
+    font-family: $font-heading;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $color-text;
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: $color-muted;
+    font-style: italic;
+    margin-left: auto;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    line-height: 1;
+    white-space: nowrap;
+    max-width: 200px;
+    height: 40px;
+    box-sizing: border-box;
+
+    svg {
+      width: 1.75rem;
+      height: 1.75rem;
+      object-fit: contain;
+    }
+  }
+
+  &--half {
+    flex: 1;
+    align-self: stretch;
+  }
+
+  &--quarter {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  &__row {
+    display: flex;
+    gap: 2rem;
+    align-items: stretch;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    &--nutrition {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+
+      @media (max-width: $breakpoint-sm) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  &__help-text {
+    font-size: 0.75rem;
+    color: $color-muted;
+    margin-top: 0.5rem;
+    font-family: $font-body;
+  }
+}
