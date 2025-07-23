@@ -4,6 +4,7 @@
 @use "base/typography.scss" as *;
 @use "base/globals.scss" as *;
 
+@use "layout/messages.scss" as *;
 
 body {
   margin: 0;
