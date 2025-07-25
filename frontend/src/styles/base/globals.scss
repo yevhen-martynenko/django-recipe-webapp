@@ -227,6 +227,7 @@
   &__textarea {
     resize: vertical;
     min-height: 100px;
+    width: 100%;
     font-family: $font-body;
   }
 
@@ -310,9 +311,8 @@
 
     .form__icon--eye-open,
     .form__icon--eye-closed {
-      display: inline-block;
-      width: 1.25rem;
-      height: 1.25rem;
+      @extend .icon;
+
       background-color: $color-muted;
       transition: background-color $transition;
     }
@@ -393,12 +393,61 @@ select.form__select {
 }
 
 // ----------------------------------------------
+// Inline messages
+// ----------------------------------------------
+.inline-message {
+  padding: 1rem 1.25rem;
+  border-radius: $radius;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  display: none;
+
+  &--success {
+    background-color: color.scale($color-success, $lightness: 45%);
+    border: 1px solid color.scale($color-success, $lightness: 20%);
+    color: color.scale($color-success, $lightness: -20%);
+  }
+
+  &--error {
+    background-color: color.scale($color-error, $lightness: 45%);
+    border: 1px solid color.scale($color-error, $lightness: 20%);
+    color: color.scale($color-error, $lightness: -20%);
+  }
+
+  strong {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  &__error {
+    color: $color-error;
+    font-family: $font-body;
+    font-size: 0.9rem;
+    display: none;
+
+    &:not(:empty) {
+      display: block;
+    }
+  }
+
+  &__success {
+    color: $color-success;
+    font-family: $font-body;
+    font-size: 0.9rem;
+    display: none;
+
+    &:not(:empty) {
+      display: block;
+    }
+  }
+}
+
+// ----------------------------------------------
 // Misc
 // ----------------------------------------------
 .image-upload {
   border: 2px dashed $color-border;
   border-radius: $radius;
-  padding: 3rem 2rem;
   text-align: center;
   cursor: pointer;
   transition: all $transition;
@@ -413,6 +462,10 @@ select.form__select {
   &:focus-within {
     border-color: $color-primary;
     box-shadow: 0 0 0 3px color.scale($color-primary, $lightness: 85%);
+  }
+
+  &--empty {
+    padding: 3rem 2rem;
   }
 
   &__input {
