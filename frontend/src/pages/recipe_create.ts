@@ -12,6 +12,96 @@ setup_tag_input("recipe_tags", "tag_container");
 init_image_uploader();
 
 // ==================================================
+// Ingredients
+// ==================================================
+let ingredient_count = 1;
+const ingredients_list = document.getElementById("ingredients_list") as HTMLElement;
+const add_ingredient_btn = document.getElementById("add_ingredient") as HTMLButtonElement;
+
+const create_ingredient_html = (index: number): string => `
+  <tr class="ingredient-row">
+    <td>
+      <input 
+        type="number" 
+        id="ingredient_quantity_${index}"
+        name="ingredient_quantities[]" 
+        placeholder="2" 
+        min="0" 
+        max="9999" 
+        step="0.1" 
+        required
+        aria-label="Quantity for ingredient ${index}"
+      />
+    </td>
+    <td>
+      <select 
+        id="ingredient_unit_${index}" 
+        name="ingredient_units[]" 
+        required 
+        aria-label="Unit for ingredient ${index}">
+        <option value="">Unit</option>
+        <option value="cups">cups</option>
+        <option value="tsp">tsp</option>
+        <option value="tbsp">tbsp</option>
+        <option value="oz">oz</option>
+        <option value="lbs">lbs</option>
+        <option value="g">g</option>
+        <option value="kg">kg</option>
+        <option value="ml">ml</option>
+        <option value="l">l</option>
+        <option value="piece">piece</option>
+        <option value="clove">clove</option>
+        <option value="pinch">pinch</option>
+        <option value="dash">dash</option>
+        <option value="can">can</option>
+        <option value="package">package</option>
+      </select>
+    </td>
+    <td>
+      <input 
+        type="text" 
+        id="ingredient_name_${index}"
+        name="ingredient_names[]" 
+        placeholder="flour" 
+        maxlength="100" 
+        required
+        aria-label="Name for ingredient ${index}"
+      />
+    </td>
+    <td>
+      <button 
+        type="button" 
+        class="ingredient-item__remove" 
+        aria-label="Remove ingredient ${index}" 
+        title="Remove this ingredient">
+        ❌
+      </button>
+    </td>
+  </tr>
+`;
+
+const add_ingredient = () => {
+  ingredient_count++;
+  const ingredient_html = create_ingredient_html(ingredient_count);
+  const wrapper = document.createElement("tbody");
+  wrapper.innerHTML = ingredient_html.trim();
+  const new_row = wrapper.firstElementChild as HTMLTableRowElement;
+  const remove_btn = new_row.querySelector(".ingredient-item__remove") as HTMLButtonElement;
+  remove_btn.addEventListener("click", () => new_row.remove());
+  const tbody = ingredients_list.querySelector("tbody")!;
+  tbody.appendChild(new_row);
+};
+
+document.querySelectorAll<HTMLButtonElement>(".ingredient-item__remove").forEach((button) => {
+  button.addEventListener("click", (e) => {
+    const item = (e.currentTarget as HTMLElement).closest(".ingredient-item");
+    item?.remove();
+  });
+});
+
+add_ingredient_btn.addEventListener("click", add_ingredient);
+
+// ==================================================
 // Blocks
 // ==================================================
 const blocks_container = document.getElementById("blocks_container")!;
