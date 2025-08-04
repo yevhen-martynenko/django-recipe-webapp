@@ -82,3 +82,75 @@ function handle_registration_error(response_data: any) {
 
   show_message(error_message, "error");
 }
+
+// ----------------------------------------------
+// LOGIN
+// ----------------------------------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const login_form = document.getElementById("login-form") as HTMLFormElement | null;
+  const login_button = document.querySelector("#login-form button[type='submit']") as HTMLButtonElement | null;
+
+  if (!login_form || !login_button) return;
+
+  login_form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const user_email = (document.getElementById("login-email") as HTMLInputElement).value;
+    const user_password = (document.getElementById("login-password") as HTMLInputElement).value;
+    const csrf_token = (document.querySelector("[name=csrfmiddlewaretoken]") as HTMLInputElement)?.value || "";
+
+    login_button.disabled = true;
+    login_button.textContent = "Signing in...";
+
+    try {
+      const response = await fetch(API_ENDPOINTS.auth.login, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrf_token,
+        },
+        body: JSON.stringify({
+          email_or_username: user_email,
+          password: user_password,
+        }),
+      });
+
+      const response_data = await response.json();
+
+      if (response.ok) {
+        if (response_data.token) {
+          localStorage.setItem("authToken", response_data.token);
+        }
+
+        store_message("Welcome back! You've been successfully logged in.", "success");
+
+        setTimeout(() => {
+          window.location.href = API_BASE_URL;
+        }, 100);
+      } else {
+        handle_login_error(response_data);
+      }
+    } catch (error) {
+      show_message("Unable to sign in. Please check your connection and try again.", "error");
+    } finally {
+      login_button.disabled = false;
+      login_button.textContent = "Sign In";
+    }
+  });
+});
+
+function handle_login_error(response_data: any) {
+  let error_message = "Login failed. Please check your credentials.";
+
+  if (response_data.non_field_errors && Array.isArray(response_data.non_field_errors)) {
+    error_message = response_data.non_field_errors[0];
+  } else if (response_data.detail) {
+    error_message = response_data.detail;
+  } else if (response_data.email_or_username && Array.isArray(response_data.email_or_username)) {
+    error_message = response_data.email_or_username[0];
+  } else if (response_data.password && Array.isArray(response_data.password)) {
+    error_message = response_data.password[0];
+  }
+
+  show_message(error_message, "error");
+}
