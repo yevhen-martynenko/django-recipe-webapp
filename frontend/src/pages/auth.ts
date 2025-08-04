@@ -1,54 +1,84 @@
 import "@styles/main.scss";
 import "@styles/pages/auth.scss";
+import "@utils/auth_tabs.ts";
+import { show_message, store_message } from "@utils/messages.ts";
+import { API_BASE_URL, API_ENDPOINTS } from "@/api.ts";
 
+// ----------------------------------------------
+// SIGNUP
+// ----------------------------------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const signup_form = document.getElementById("signup-form") as HTMLFormElement | null;
+  const signup_button = document.getElementById("signup-button") as HTMLButtonElement | null;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const tabButtons = document.querySelectorAll<HTMLButtonElement>(".auth__tab");
-  const panels = document.querySelectorAll<HTMLElement>(".auth__form-panel");
+  if (!signup_form || !signup_button) return;
 
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const targetPanelId = button.getAttribute("aria-controls");
-      if (!targetPanelId) return;
+  signup_form.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-      const currentActivePanel = document.querySelector<HTMLElement>(
-        ".auth__form-panel:not(.auth__form-panel--hidden)"
-      );
-      const targetPanel = document.getElementById(targetPanelId);
+    const user_email = (document.getElementById("signup-email") as HTMLInputElement).value;
+    const user_name = (document.getElementById("signup-username") as HTMLInputElement).value;
+    const user_password = (document.getElementById("signup-password") as HTMLInputElement).value;
+    const remember_me = (document.querySelector('input[name="remember"]') as HTMLInputElement)?.checked || false;
+    const csrf_token = (document.querySelector("[name=csrfmiddlewaretoken]") as HTMLInputElement)?.value || "";
 
-      if (!targetPanel) return;
+    signup_button.disabled = true;
+    signup_button.textContent = "Creating Account...";
 
-      // Deactivate all tabs
-      tabButtons.forEach((btn) => {
-        btn.classList.remove("auth__tab--active");
-        btn.setAttribute("aria-selected", "false");
+    try {
+      const response = await fetch(API_ENDPOINTS.auth.register, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrf_token,
+        },
+        body: JSON.stringify({
+          email: user_email,
+          username: user_name,
+          password: user_password,
+          remember: remember_me,
+        }),
       });
 
-      // Activate clicked tab
-      button.classList.add("auth__tab--active");
-      button.setAttribute("aria-selected", "true");
+      const response_data = await response.json();
 
-      // Transition handler
-      const completeTransition = () => {
-        targetPanel.style.display = "block";
+      if (response.ok) {
+        if (response_data.token) {
+          localStorage.setItem("authToken", response_data.token);
+        }
+
+        store_message("Account created successfully!", "success");
+        signup_form.reset();
+
         setTimeout(() => {
-          targetPanel.classList.remove("auth__form-panel--hidden");
-        }, 20);
-      };
-
-      if (currentActivePanel && currentActivePanel !== targetPanel) {
-        currentActivePanel.classList.add("auth__form-panel--hidden");
-        currentActivePanel.addEventListener(
-          "transitionend",
-          () => {
-            currentActivePanel.style.display = "none";
-            completeTransition();
-          },
-          { once: true }
-        );
+          window.location.href = API_BASE_URL;
+        }, 100);
       } else {
-        completeTransition();
+        handle_registration_error(response_data);
       }
-    });
+    } catch (error) {
+      show_message("Unable to create account. Please check your connection and try again.", "error");
+    } finally {
+      signup_button.disabled = false;
+      signup_button.textContent = "Create Account";
+    }
   });
 });
+
+function handle_registration_error(response_data: any) {
+  let error_message = "Registration failed. Please try again.";
+
+  if (response_data.email && Array.isArray(response_data.email)) {
+    error_message = response_data.email[0];
+  } else if (response_data.username && Array.isArray(response_data.username)) {
+    error_message = response_data.username[0];
+  } else if (response_data.password && Array.isArray(response_data.password)) {
+    error_message = response_data.password[0];
+  } else if (response_data.detail) {
+    error_message = response_data.detail;
+  } else if (response_data.non_field_errors && Array.isArray(response_data.non_field_errors)) {
+    error_message = response_data.non_field_errors[0];
+  }
+
+  show_message(error_message, "error");
+}
