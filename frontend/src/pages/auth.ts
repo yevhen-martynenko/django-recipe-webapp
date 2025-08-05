@@ -4,6 +4,27 @@ import "@utils/auth_tabs.ts";
 import { show_message, store_message } from "@utils/messages.ts";
 import { API_BASE_URL, API_ENDPOINTS } from "@/api.ts";
 
+function pushFormEvent(formType) {
+  window.dataLayer = window.dataLayer || [];
+
+  window.dataLayer.push({
+    event: "form_submit", // Event name for GTM trigger
+    form_type: formType, // Custom parameter
+    event_category: "engagement", // Optional for reporting
+    event_label: formType + "_form",
+  });
+}
+
+// Login form tracking
+document.getElementById("login-form").addEventListener("submit", function () {
+  pushFormEvent("login");
+});
+
+// Signup form tracking
+document.getElementById("signup-form").addEventListener("submit", function () {
+  pushFormEvent("signup");
+});
+
 // ----------------------------------------------
 // SIGNUP
 // ----------------------------------------------
@@ -154,3 +175,49 @@ function handle_login_error(response_data: any) {
 
   show_message(error_message, "error");
 }
+
+// ----------------------------------------------
+// GOOGLE AUTHENTICATION
+// ----------------------------------------------
+document.addEventListener("DOMContentLoaded", function () {
+  const google_buttons = document.querySelectorAll<HTMLButtonElement>(".auth__google-btn");
+
+  if (google_buttons.length === 0) return;
+
+  google_buttons.forEach((button) => {
+    button.addEventListener("click", async function (e) {
+      e.preventDefault();
+
+      const original_content = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = `<span class="auth__google-icon"></span>Connecting...`;
+
+      try {
+        const response = await fetch(API_ENDPOINTS.auth.google, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          show_message("Unable to connect with Google. Please try again.", "error");
+          return;
+        }
+
+        const response_data = await response.json();
+
+        if (!response_data.url) {
+          show_message("Google authentication is temporarily unavailable.", "error");
+          return;
+        }
+
+        window.location.href = response_data.url;
+      } catch (error) {
+        show_message("Connection error. Please check your internet and try again.", "error");
+      } finally {
+        button.disabled = false;
+        button.innerHTML = original_content;
+      }
+    });
+  });
+});
