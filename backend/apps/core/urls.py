@@ -11,7 +11,7 @@ from apps.core.views.auth import (
 from apps.core.views.users import (
     user_detail_view,
     user_me_detail_view,
-    user_me_delete_view,  # BUG: ?????
+    user_me_delete_view,
 )
 from apps.core.views.recipes import (
     recipe_list_view,
@@ -38,9 +38,10 @@ urlpatterns = [
     path('auth/', auth_view, name='user-auth'),
     path('auth/activate/', activate_view, name='user-activate'),
     path('auth/password-reset/', auth_password_reset_view, name='password-reset'),
-    path('auth/password-reset-confirm/<uidb64>/<token>/', auth_password_reset_confirm_view, name='password-reset-confirm'),
+    path('auth/password-reset/confirm/', auth_password_reset_confirm_view, name='password-reset-confirm'),
 
     # User
+    # path('users/', user_me_detail_view, name='user-list'),
     path('users/me/', user_me_detail_view, name='user-update'),
     path('users/me/delete/', user_me_delete_view, name='user-delete'),
     path('users/view/<str:username>/', user_detail_view, name='user-view'),
@@ -56,12 +57,9 @@ urlpatterns = [
     # path('recipes/view/<slug:slug>/export/<str:format>/', coming_soon_view, name='recipe-export'),  # format = txt|pdf|json
 
     # Tags
-    # path('tags/', coming_soon_view, name='tag-list'),
-    # path('tags/create/', coming_soon_view, name='tag-create'),
-    # path('tags/view/<slug:slug>/', coming_soon_view, name='tag-detail'),
-    # path('tags/view/<slug:slug>/update/', coming_soon_view, name='tag-update'),
-    # path('tags/view/<slug:slug>/delete/', coming_soon_view, name='tag-delete'),
-    # path('tags/view/<slug:slug>/suggest/', coming_soon_view, name='tag-suggest'),
+    path('tags/', coming_soon_view, name='tag-list'),
+    path('tags/suggest/', coming_soon_view, name='tag-suggest'),
+    path('tags/create/', coming_soon_view, name='tag-create'),
 
     # Misc
     path('feedback/', feedback_view, name='feedback'),

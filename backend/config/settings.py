@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     # local
     'apps.core',
     'apps.users',
+    'apps.recipes',
 
     # default
     'django.contrib.admin',
@@ -35,10 +36,18 @@ INSTALLED_APPS = [
     # third-party
     'rest_framework',
     'manifest_loader',
+    'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     # custom
+    'corsheaders.middleware.CorsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 
     # default
     'django.middleware.security.SecurityMiddleware',
@@ -48,6 +57,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # custom
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -80,7 +92,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'database' / 'db.sqlite3',
     }
 }
 
@@ -102,18 +114,51 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://alpaca-quick-satyr.ngrok-free.app",
+    "http://0.0.0.0:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://alpaca-quick-satyr.ngrok-free.app",
+    "http://0.0.0.0:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -121,9 +166,81 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom
 AUTH_USER_MODEL = "users.User"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7
 
 
 MANIFEST_LOADER = {
     'manifest_file': os.path.join(BASE_DIR, 'static/manifest.json'),
 }
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+
+auth_classes = [
+    'rest_framework.authentication.SessionAuthentication',
+    'apps.users.authentication.TokenAuthentication',
+]
+if DEBUG:
+    auth_classes = [
+        'rest_framework.authentication.SessionAuthentication',
+        'apps.users.authentication.TokenAuthentication',
+    ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '3/hour',
+    },
+}
+
+FRONTEND_AFTER_GOOGLE_LOGIN_URL = env('FRONTEND_AFTER_GOOGLE_LOGIN_URL')
+ACTIVATION_LINK_URL = env('ACTIVATION_LINK_URL')
+PASSWORD_RESET_URL = env('PASSWORD_RESET_URL')
+
+
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_TIMEOUT = 60
+DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER')
+SERVER_EMAIL = env('EMAIL_HOST_USER')
+
+
+# Google
+# ACCOUNT_UNIQUE_EMAIL = True
+# ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# ACCOUNT_LOGIN_METHODS = {'email'}
+# ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
+
+GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID')
+GOOGLE_OAUTH2_CLIENT_SECRET = env('GOOGLE_OAUTH2_CLIENT_SECRET')
+GOOGLE_OAUTH2_CALLBACK_URL = env('GOOGLE_OAUTH2_CALLBACK_URL')
+
+
+# Allauth
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APPS': [
+            {
+                'client_id': GOOGLE_OAUTH2_CLIENT_ID,
+                'secret': GOOGLE_OAUTH2_CLIENT_SECRET,
+                'key': '',
+            },
+        ],
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+    }
+}
+SITE_ID = 1
