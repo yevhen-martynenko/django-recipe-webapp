@@ -1,19 +1,7 @@
-from django.views.generic import TemplateView
-from django.utils.timezone import make_aware
 from datetime import datetime
-from django.core.paginator import Paginator
 
-
-# class MainView(TemplateView):
-#     template_name = "pages/index.html"
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context.update({
-#             "title": "Main",
-#             "is_partials": True,
-#         })
-#         return context
+from django.utils.timezone import make_aware
+from django.views.generic import TemplateView
 
 
 class MainView(TemplateView):
@@ -22,14 +10,11 @@ class MainView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Mock data for featured recipe
         featured_recipe = {
             "title": "Homemade Italian Pizza",
             "description": "Master the art of pizza making with our authentic Italian recipe. Perfect crispy crust and melty cheese guaranteed.",
             "get_absolute_url": "/recipes/homemade-italian-pizza"
         }
-
-        # Mock data for popular recipes
         popular_recipes = [
             {
                 "id": "123",
@@ -42,8 +27,6 @@ class MainView(TemplateView):
             }
             for _ in range(10)
         ]
-
-        # Mock data for recommended recipes
         recommended_recipes = [
             {
                 "id": "234",
@@ -56,11 +39,6 @@ class MainView(TemplateView):
             }
             for _ in range(10)
         ]
-
-        # Paginated recommended recipes (mock pagination)
-        # paginator = Paginator(recommended_recipes, 3)
-        # page_number = self.request.GET.get('page')
-        # page_obj = paginator.get_page(page_number)
 
         context.update({
             "title": "Main",
@@ -80,6 +58,7 @@ class ComingSoonView(TemplateView):
 
         target_time = datetime(2026, 1, 1, 0, 0, 0)
         aware_time = make_aware(target_time)
+        
         social_media_urls = (
             # ('X', 'https://x.com'),
             ('Instagram', 'https://www.instagram.com'),
@@ -90,8 +69,8 @@ class ComingSoonView(TemplateView):
         )
 
         context.update({
-            "title": "Coming soon",
-            "is_partials": True,
+            "title": "Coming Soon",
+            "is_partials": False,
             "future_time": aware_time.isoformat(),
             "social_media_urls": social_media_urls
         })
@@ -146,7 +125,10 @@ class SiteMapView(TemplateView):
     template_name = "pages/site_map.html"
 
     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
         BASE_URL = "http://127.0.0.1:8000"
+        
         urls = {
             "Main Page": {
                 "urls": {
@@ -154,22 +136,24 @@ class SiteMapView(TemplateView):
                 },
                 "badge": "main",
             },
-            "Authentication": {
-                "urls": {
-                    "Sign in/Sign up": "/auth",
-                    "Activate": "/activate",
-                    "Password reset": "/password-reset",
-                    "Password reset confirm": "/password-reset/confirm",
-                },
-                "badge": "auth",
-            },
             "Recipes": {
                 "urls": {
                     "All Recipes": "/recipes",
+                    "Recipe Detail": "/recipes/view/recipe",
                     "Create Recipe": "/recipes/create",
                     "Random Recipe": "/recipes/random",
+                    "Recipe Report": "/recipes/view/test-recipe/report",
                 },
                 "badge": "recipe",
+            },
+            "Authentication": {
+                "urls": {
+                    "Sign in/Sign up": "/auth",
+                    "Activate": "/auth/activate",
+                    "Password reset": "/auth/password-reset",
+                    "Password reset confirm": "/auth/password-reset/confirm/",
+                },
+                "badge": "auth",
             },
             "User Management": {
                 "urls": {
@@ -178,6 +162,14 @@ class SiteMapView(TemplateView):
                     "User Profiles": "/users",
                 },
                 "badge": "user",
+            },
+            "Tags": {
+                "urls": {
+                    "All Tags": "/tags",
+                    "Suggest Tag": "/tags/suggest",
+                    "Create Tag": "/tags/create",
+                },
+                "badge": "tag",
             },
             "Additional Pages": {
                 "urls": {
@@ -189,9 +181,8 @@ class SiteMapView(TemplateView):
             }
         }
 
-        context = super().get_context_data(**kwargs)
         context.update({
-            "title": "Site map",
+            "title": "Site Map",
             "is_partials": True,
             "urls": urls,
             "base_url": BASE_URL,

@@ -1,7 +1,4 @@
 from django.views.generic import TemplateView
-from django.utils.timezone import make_aware
-from datetime import datetime
-from django.core.paginator import Paginator
 
 
 class UserDetailView(TemplateView):
@@ -18,6 +15,7 @@ class UserMeDetailView(TemplateView):
             "is_partials": True,
         })
         return context
+
 
 class UserMeDeleteView(TemplateView):
     template_name = "pages/user_delete.html"
