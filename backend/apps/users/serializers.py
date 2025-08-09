@@ -2,8 +2,11 @@ import random
 import requests
 
 from django.conf import settings
+from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.utils.encoding import force_str
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers, exceptions
 from rest_framework.reverse import reverse
 from allauth.socialaccount.models import SocialAccount
@@ -231,11 +234,11 @@ class GoogleAuthSerializer(serializers.Serializer):
         )
         if response.status_code != 200:
             raise serializers.ValidationError('Failed to fetch access token')
-        
+
         access_token = response.json().get('access_token')
         if not access_token:
             raise serializers.ValidationError('Access token not found')
-        
+
         self.access_token = access_token
         return code
 
@@ -245,17 +248,17 @@ class GoogleAuthSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
-    
+
     def get_user_info(self):
         response = requests.get(
             'https://www.googleapis.com/oauth2/v3/userinfo',
             headers={'Authorization': f'Bearer {self.access_token}'}
         )
         user_info = response.json() if response.status_code == 200 else None
-        
+
         if not user_info:
             raise serializers.ValidationError('Failed to fetch user info')
-        
+
         return user_info
 
     def get_or_create_user(self, user_info):
@@ -315,4 +318,36 @@ class PasswordResetSerializer(serializers.Serializer):
             attrs['user'] = user
         except User.DoesNotExist:
             raise serializers.ValidationError('No active user found with this email.')
+        return attrs
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField(write_only=True)
+    code = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_new_password = serializers.CharField(write_only=True)
+
+    def validate_uid(self, value):
+        try:
+            decoded = force_str(urlsafe_base64_decode(value))
+            return decoded
+        except Exception:
+            raise serializers.ValidationError("Invalid UID format")
+
+    def validate_code(self, value):
+        try:
+            decoded = force_str(urlsafe_base64_decode(value))
+            return decoded
+        except Exception:
+            raise serializers.ValidationError("Invalid reset code format")
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['confirm_new_password']:
+            raise serializers.ValidationError({"confirm_new_password": "Passwords do not match"})
+
+        try:
+            validate_password(attrs['new_password'])
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"new_password": e.messages})
+
         return attrs
