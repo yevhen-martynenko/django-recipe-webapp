@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from apps.users.models import ActivationCode
 
 
-def send_activation_email(user):
+def send_email(user, subject, template, base_url):
     try:
         ActivationCode.objects.filter(user=user).delete()
 
@@ -25,14 +25,13 @@ def send_activation_email(user):
         uid = urlsafe_base64_encode(force_bytes(user.id))
         code_encoded = urlsafe_base64_encode(force_bytes(code))
 
-        activation_link = f'{settings.ACTIVATION_LINK_URL}?uid={uid}&code={code_encoded}'
+        link = f'{base_url}?uid={uid}&code={code_encoded}'
 
-        subject = 'Activate your account'
         message = render_to_string(
-            'email/activate_account.html',
+            template,
             {
                 'user': user,
-                'activation_link': activation_link,
+                'link': link,
             }
         )
 
@@ -44,7 +43,28 @@ def send_activation_email(user):
         )
         email.content_subtype = 'html'
         email.send()
+
+        return True
+
     except Exception as e:
         raise e
         # message.error(f"Failed to send activation email to {user.email}: {str(e)}")
         # logger.error(f"Failed to send activation email to {user.email}: {str(e)}")
+
+
+def send_activation_email(user):
+    return send_email(
+        user=user,
+        subject='Activate your account',
+        template='email/activate_account.html',
+        base_url=settings.ACTIVATION_LINK_URL
+    )
+
+
+def send_password_reset_email(user):
+    return send_email(
+        user=user,
+        subject='Reset Your Password',
+        template='email/password_reset.html',
+        base_url=f'{settings.PASSWORD_RESET_URL}confirm'
+    )
