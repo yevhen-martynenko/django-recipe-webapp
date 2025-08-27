@@ -48,8 +48,12 @@ logs/
 
 # IDE & Editors
 .vim_session
+.session.vim
 .vscode/
 .idea/
 *.swp
 *.sublime-workspace
 *.sublime-project
+
+# Misc
+TODO.md
