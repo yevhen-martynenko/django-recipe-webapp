@@ -12,7 +12,6 @@ environ.Env.read_env(env_file_path)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Use environment variables
 DEBUG = env.bool('DEBUG', default=False)
 SECRET_KEY = env('SECRET_KEY', default='default-secret-key')
@@ -22,6 +21,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 # Application definition
 INSTALLED_APPS = [
     # local
+    'apps.core',
     'apps.users',
     'apps.recipes',
 
@@ -35,15 +35,18 @@ INSTALLED_APPS = [
 
     # third-party
     'rest_framework',
+    'manifest_loader',
     'rest_framework.authtoken',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     # custom
+    'corsheaders.middleware.CorsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 
     # default
@@ -61,6 +64,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
@@ -88,7 +97,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'database' / 'db.sqlite3',
     }
 }
 
@@ -110,6 +119,41 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://alpaca-quick-satyr.ngrok-free.app",
+    "http://0.0.0.0:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://alpaca-quick-satyr.ngrok-free.app",
+    "http://0.0.0.0:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://0.0.0.0:8080",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -120,6 +164,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 
+
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -127,6 +172,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom
 AUTH_USER_MODEL = "users.User"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7
+
+
+MANIFEST_LOADER = {
+    'manifest_file': os.path.join(BASE_DIR, 'static/manifest.json'),
+}
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 
 auth_classes = [
     'rest_framework.authentication.SessionAuthentication',
@@ -162,6 +214,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_TIMEOUT = 60
+DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER')
+SERVER_EMAIL = env('EMAIL_HOST_USER')
 
 
 # Google
