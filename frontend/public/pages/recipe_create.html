@@ -1,0 +1,359 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% asset_tags 'recipe_create.css' %}">
+{% endblock page_styles %}
+
+
+{% block content %}
+<div class="container">
+  <main class="recipe-create" role="main">
+    <!-- Header -->
+    <header class="recipe-header">
+      <div class="recipe-header__container">
+        <div class="recipe-header__content">
+          <div class="recipe-header__text">
+            <h1 class="recipe-header__title">Create New Recipe</h1>
+            <p class="recipe-header__subtitle">Share your culinary masterpiece with the world</p>
+          </div>
+          <div class="recipe-header__actions">
+            <button type="button" class="recipe-header__btn btn" form="recipe_form">
+              <svg class="btn__icon" fill="none" stroke="currentColor" display="block" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              Preview
+            </button>
+            <button type="button" class="recipe-header__btn btn" form="recipe_form">
+              Save Draft
+            </button>
+            <button type="submit" class="recipe-header__btn btn" form="recipe_form">
+              Publish
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    <div id="success_message" class="message message--success" role="alert" aria-live="polite" style="display: none;">
+      <strong>Recipe saved successfully!</strong>
+    </div>
+
+    <div id="error_message" class="message message--error" role="alert" aria-live="assertive" style="display: none;">
+      <strong>Error saving recipe.</strong>
+      Please check the form and try again.
+    </div>
+
+    <!-- Form -->
+    <form class="recipe__form" id="recipe_form" method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <!-- Recipe Basics Card -->
+      <section class="recipe-section" aria-labelledby="basics_heading">
+        <div class="recipe-section__header">
+          <h2 class="recipe-section__title" id="basics_heading">Recipe Basics</h2>
+        </div>
+
+        <div class="recipe-section__content">
+          <!-- Recipe Title -->
+          <div class="recipe-block">
+            <div class="recipe-block__header" id="title_header">
+              <h3 class="recipe-block__title">Recipe Title</h3>
+            </div>
+
+            <input
+              type="text"
+              id="recipe_title"
+              name="title"
+              class="form__field"
+              placeholder="Enter your recipe title..."
+              required
+              maxlength="64"
+              aria-describedby="recipe_title_error"
+              autocomplete="off"
+            />
+            <div id="recipe_title_error" class="message__error" role="alert" aria-live="polite"></div>
+          </div>
+
+          <!-- Main Image -->
+          <div class="recipe-block">
+            <div class="recipe-block__header" id="main_image_header">
+              <h3 class="recipe-block__title">Main Image</h3>
+            </div>
+
+            <div class="image-upload image-upload--empty" id="main_image_container" tabindex="0" role="button" aria-describedby="main_image_error main_image_help">
+              <input
+                type="file"
+                id="main_image"
+                name="main_image"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                class="image-upload__input"
+                aria-describedby="main_image_error main_image_help"
+              />
+              <div class="image-upload__content" id="image_upload_content">
+                <div class="image-upload__icon" aria-hidden="true">
+                  <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <div class="image-upload__text">
+                  <span class="image-upload__text--primary">Drop your image here or click to browse</span>
+                  <span class="image-upload__text--secondary">JPG, PNG, GIF, or WebP up to 10MB</span>
+                </div>
+              </div>
+            </div>
+            <div id="main_image_help" class="recipe-block__help-text">
+              Recommended: 1200x800 pixels for best display quality
+            </div>
+            <div id="main_image_error" class="message__error" role="alert" aria-live="polite"></div>
+          </div>
+
+          <!-- Ingredients Section -->
+          <div class="recipe-block" aria-labelledby="ingredients_heading">
+            <div class="recipe-block__header" id="ingredients_header">
+              <h3 class="recipe-block__title">Ingredients</h3>
+              <button type="button" class="recipe-block__button btn" id="add_ingredient">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Add Ingredient
+              </button>
+            </div>
+
+            <table class="ingredients-table" id="ingredients_list" aria-live="polite">
+              <thead>
+                <tr>
+                  <th scope="col">Quantity</th>
+                  <th scope="col">Unit</th>
+                  <th scope="col">Ingredient</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Content Blocks Card -->
+      <section class="recipe-section" aria-labelledby="content_blocks_heading">
+        <!-- Header -->
+        <div class="recipe-section__header">
+          <h2 class="recipe-section__title" id="content_blocks_heading">Content Blocks</h2>
+          <div class="recipe-section__buttons">
+            <button type="button" class="recipe-section__button" id="add_text_button" aria-describedby="add_text_help">
+              <img id="icon_add_text" class="icon" alt="" aria-hidden="true" />
+              Add Text Block
+            </button>
+            <button type="button" class="recipe-section__button" id="add_image_button" aria-describedby="add_image_help">
+              <img id="icon_add_image" class="icon" alt="" aria-hidden="true" />
+              Add Image Block
+            </button>
+          </div>
+        </div>
+
+        <!-- Content Blocks -->
+        <div class="recipe-section__content" id="blocks_container" role="region" aria-labelledby="content_blocks_heading"></div>
+      </section>
+
+      <!-- Recipe Details Card -->
+      <section class="recipe-section" aria-labelledby="details_heading">
+        <div class="recipe-section__header">
+          <h2 class="recipe-section__title" id="details_heading">Recipe Details</h2>
+        </div>
+
+        <div class="recipe-section__content">
+
+          <div class="recipe-block__row">
+            <!-- Tags -->
+            <div class="recipe-block recipe-block--half">
+              <div class="recipe-block__header" id="tags_header">
+                <h3 class="recipe-block__title">Tags</h3>
+              </div>
+
+              <div id="tag_container" class="tag__container">
+                <input
+                  type="text"
+                  id="recipe_tags"
+                  name="tags"
+                  class="form__field"
+                  placeholder="e.g. vegetarian, quick, healthy..."
+                  aria-describedby="recipe_tags_help"
+                  autocomplete="off"
+                />
+              </div>
+              <div id="recipe_tags_help" class="recipe-block__help-text">
+                Separate tags with commas or press enter
+              </div>
+            </div>
+
+            <!-- Visibility -->
+            <div class="recipe-block recipe-block--half">
+              <div class="recipe-block__header" id="visibility_header">
+                <h3 class="recipe-block__title">Visibility</h3>
+              </div>
+
+              <label class="checkbox">
+                <input type="checkbox" class="checkbox__input" id="is_private" name="is_private"/>
+                <span class="checkbox__visual" aria-hidden="true"></span>
+                <span class="checkbox__label">Private</span>
+              </label>
+              <div class="recipe-block__help-text">
+                Private recipes are only visible to you
+              </div>
+            </div>
+          </div>
+
+          <!-- Cooking Time Section -->
+          <div class="recipe-block" aria-labelledby="timing_heading">
+            <div class="recipe-block__header" id="timing_header">
+              <h3 class="recipe-block__title">Cooking Time</h3>
+            </div>
+
+            <div class="recipe-block__row">
+              <div class="recipe-block recipe-block--half">
+                <label for="prep_time" class="form__label">Prep Time (minutes)</label>
+                <input 
+                  type="number" 
+                  id="prep_time" 
+                  name="prep_time" 
+                  class="form__field" 
+                  placeholder="15" 
+                  min="0"
+                  max="1440"
+                  aria-describedby="prep_time_help"
+                  required
+                />
+                <div id="prep_time_help" class="recipe-block__help-text">Time to prepare ingredients</div>
+              </div>
+              <div class="recipe-block recipe-block--half">
+                <label for="cook_time" class="form__label">Cook Time (minutes)</label>
+                <input 
+                  type="number" 
+                  id="cook_time" 
+                  name="cook_time" 
+                  class="form__field" 
+                  placeholder="30" 
+                  min="0"
+                  max="1440"
+                  aria-describedby="cook_time_help"
+                  required
+                />
+                <div id="cook_time_help" class="recipe-block__help-text">Active cooking time</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nutrition Section -->
+          <div class="recipe-block" aria-labelledby="nutrition_heading">
+            <div class="recipe-block__header" id="nutrition_header">
+              <h3 class="recipe-block__title optional" id="nutrition_heading">Nutrition Information</h3>
+              <span class="recipe-block__subtitle">Per 100g</span>
+            </div>
+
+            <div class="recipe-block__row">
+              <div class="recipe-block recipe-block--quarter">
+                <label for="calories" class="form__label">Calories</label>
+                <input 
+                  type="number" 
+                  id="calories" 
+                  name="calories" 
+                  class="form__field" 
+                  placeholder="250" 
+                  min="0"
+                  max="9999"
+                  step="1"
+                  aria-describedby="calories_help"
+                />
+                <div id="calories_help" class="recipe-block__help-text">Total calories per 100g</div>
+              </div>
+
+              <div class="recipe-block recipe-block--quarter">
+                <label for="protein" class="form__label">Protein (g)</label>
+                <input 
+                  type="number" 
+                  id="protein" 
+                  name="protein" 
+                  class="form__field" 
+                  placeholder="12" 
+                  min="0" 
+                  max="999"
+                  step="0.1"
+                  aria-describedby="protein_help"
+                />
+                <div id="protein_help" class="recipe-block__help-text">Protein grams per 100g</div>
+              </div>
+
+              <div class="recipe-block recipe-block--quarter">
+                <label for="carbs" class="form__label">Carbs (g)</label>
+                <input 
+                  type="number" 
+                  id="carbs" 
+                  name="carbs" 
+                  class="form__field" 
+                  placeholder="35" 
+                  min="0" 
+                  max="999"
+                  step="0.1"
+                  aria-describedby="carbs_help"
+                />
+                <div id="carbs_help" class="recipe-block__help-text">Carbohydrates grams per 100g</div>
+              </div>
+
+              <div class="recipe-block recipe-block--quarter">
+                <label for="fat" class="form__label">Fat (g)</label>
+                <input 
+                  type="number" 
+                  id="fat" 
+                  name="fat" 
+                  class="form__field" 
+                  placeholder="8" 
+                  min="0" 
+                  max="999"
+                  step="0.1"
+                  aria-describedby="fat_help"
+                />
+                <div id="fat_help" class="recipe-block__help-text">Fat grams per 100g</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="recipe-block">
+            <div class="recipe-block__header" id="description_header">
+              <h3 class="recipe-block__title optional">Description</h3>
+            </div>
+
+            <textarea
+              id="recipe_description"
+              name="description"
+              class="form__field form__textarea"
+              placeholder="Brief description of your recipe..."
+              rows="4"
+              maxlength="500"
+              aria-describedby="recipe_description_help"
+            ></textarea>
+            <div id="recipe_description_help" class="recipe-block__help-text">
+              Optional: Add a brief description to help others understand your recipe (max 500 characters)
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </form>
+  </main>
+</div>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'recipe_create.js' %}"></script>
+{% endblock page_scripts %}

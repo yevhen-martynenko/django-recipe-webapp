@@ -1,0 +1,76 @@
+@use "../base/variables.scss" as *;
+@use "sass:list";
+@use "sass:map";
+
+$messages: (
+  "success": $color-success,
+  "error": $color-error,
+  "warning": $color-warning,
+  "info": $color-info,
+);
+
+.messages {
+  position: fixed;
+  top: 1rem;
+  right: 0.5rem;
+  z-index: 9999;
+  max-width: 350px;
+
+  &__item {
+    background: $color-surface;
+    border-radius: $radius;
+    margin-bottom: 1rem;
+    padding: 1rem 2rem 1rem 1rem;
+    position: relative;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: $transition;
+    border-left: calc($radius / 2) solid $color-border;
+
+    &--show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    @each $status, $color in $messages {
+      &--#{$status} {
+        border-left-color: $color;
+      }
+    }
+  }
+
+  &__text {
+    font-size: 1.25rem;
+    color: $color-text;
+    line-height: 1.4;
+    font-family: $font-body;
+  }
+
+  &__close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: $color-muted;
+    cursor: pointer;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: $color-text;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    left: 2rem;
+    right: 2rem;
+    max-width: none;
+  }
+}

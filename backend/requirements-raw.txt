@@ -5,6 +5,9 @@ djangorestframework
 django-allauth
 django-filter
 jwt
+django-manifest-loader
+Pillow
+django-cors-headers
 
 # dev
 requests

@@ -1,0 +1,55 @@
+// ----------------------------------------------
+// Colors
+// ----------------------------------------------
+$color-primary: #88c100;  // #01c176
+$color-secondary: #fef8f3;
+$color-placeholder: #aaa;
+$color-text: #333;
+$color-text-secondary: #666;
+$color-muted: #777;
+$color-border: #ddd;
+$color-accent: #f1f1f1;
+$color-white: #fff;
+$color-surface: #f8f8f8;
+$color-black: #000;
+
+$color-error: #f44336;
+$color-success: #4caf50;
+$color-danger: #f44336;
+$color-warning: #ff9800;
+$color-info: #2196f3;
+
+$color-1: #ff595e;
+$color-2: #ff924c;
+$color-3: #ffca3a;
+$color-4: #8ac926;
+$color-5: #52a675;
+$color-6: #1982c4;
+$color-7: #4267ac;
+$color-8: #6a4c93;
+
+
+// ----------------------------------------------
+// Fonts
+// ----------------------------------------------
+$font-body: 'Inter', sans-serif;
+$font-heading: 'Libre Baskerville', serif;
+
+
+// ----------------------------------------------
+// Breakpoints
+// ----------------------------------------------
+$breakpoint-xs: 480px;     // Mobile Small
+$breakpoint-sm: 768px;     // Tablet
+$breakpoint-md: 1024px;    // Laptop
+$breakpoint-lg: 1280px;    // Desktop
+$breakpoint-xl: 1536px;    // XL Desktop
+
+
+// ----------------------------------------------
+// Misc
+// ----------------------------------------------
+$radius: 8px;
+$transition: 0.3s ease;
+$border: 1px solid $color-border;
+$border-select: 1px solid $color-primary;

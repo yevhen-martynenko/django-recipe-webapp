@@ -24,7 +24,6 @@ collectstatic/
 .env.*
 !.env.example
 .vim_session
-*.ftr*/
 
 # Database
 database/
@@ -32,6 +31,7 @@ migrations/
 db.sqlite3
 *.sqlite3
 *.db
+*.ftr*/
 
 # Cache
 __pycache__/
@@ -50,8 +50,12 @@ logs/
 
 # IDE & Editors
 .vim_session
+.session.vim
 .vscode/
 .idea/
 *.swp
 *.sublime-workspace
 *.sublime-project
+
+# Misc
+TODO.md
