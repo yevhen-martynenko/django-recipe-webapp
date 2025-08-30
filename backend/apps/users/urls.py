@@ -12,6 +12,8 @@ from apps.users.views import (
     user_logout_view,
     user_google_login_view,
     user_google_login_callback_view,
+    user_password_reset_view,
+    user_password_reset_confirm_view,
 )
 
 
@@ -27,6 +29,8 @@ urlpatterns = [
         path('register/', user_register_view, name='user-register'),
         path('login/', user_login_view, name='user-login'),
         path('logout/', user_logout_view, name='user-logout'),
+        path('password-reset/', user_password_reset_view, name='user-password-reset'),
+        path('password-reset/confirm/', user_password_reset_confirm_view, name='user-password-reset-confirm'),
         path('activate/', user_activate_view, name='user-activate'),
         path('google/', user_google_login_view, name='user-google-login'),
         path('google/callback/', user_google_login_callback_view, name='user-google-login-callback'),

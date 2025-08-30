@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, AuthenticationFailed
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.throttling import AnonRateThrottle
 
 from apps.users.models import User, ActivationCode
 from apps.users.authentication import TokenAuthentication
@@ -24,6 +25,8 @@ from apps.users.serializers import (
     UserUpdateSerializer,
     UserLoginSerializer,
     GoogleAuthSerializer,
+    PasswordResetSerializer,
+    PasswordResetConfirmSerializer,
 )
 from apps.users.permissions import (
     IsOwner,
@@ -32,6 +35,7 @@ from apps.users.permissions import (
 )
 from apps.users.tasks import (
     send_activation_email,
+    send_password_reset_email,
 )
 
 
@@ -327,6 +331,84 @@ class UserGoogleLoginCallbackView(APIView):
         return redirect(redirect_url)
 
 
+class UserPasswordResetView(generics.CreateAPIView):
+    """
+    Password Reset
+
+    Sends a password reset email to the user
+    """
+    serializer_class = PasswordResetSerializer
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data['user']
+        send_password_reset_email(user=user)
+
+        return Response(
+            {
+                'detail': 'Password reset email sent successfully.',
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+class UserPasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request, *args, **kwargs):
+        data = request.data.copy()
+        if 'uid' not in data and 'uid' in request.query_params:
+            data['uid'] = request.query_params['uid']
+        if 'code' not in data and 'code' in request.query_params:
+            data['code'] = request.query_params['code']
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        uid = serializer.validated_data['uid']
+        code = serializer.validated_data['code']
+        new_password = serializer.validated_data['new_password']
+
+        user = User.objects.filter(id=uid).first()
+        if not user:
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        activation_code = ActivationCode.objects.filter(user=user).order_by('-created_at').first()
+        if not activation_code:
+            return Response({'detail': 'Reset code not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if activation_code.is_expired():
+            activation_code.delete()
+            return Response({'detail': 'Reset code has expired'}, status=status.HTTP_410_GONE)
+
+        received_code = str(code).strip()
+        stored_code = str(activation_code.code).strip()
+
+        try:
+            codes_match = secrets.compare_digest(received_code, stored_code)
+        except TypeError as e:
+            codes_match = received_code == stored_code
+
+        if not codes_match:
+            activation_code.delete()
+            return Response({'detail': 'Invalid reset code'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                user.set_password(new_password)
+                user.save()
+                activation_code.delete()
+            return Response({'detail': 'Password reset successful'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Password reset failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 user_register_view = UserRegisterView.as_view()
 user_activate_view = UserActivateView.as_view()
 user_list_view = UserListView.as_view()
@@ -337,3 +419,5 @@ user_login_view = UserLoginView.as_view()
 user_logout_view = UserLogoutView.as_view()
 user_google_login_view = UserGoogleLoginView.as_view()
 user_google_login_callback_view = UserGoogleLoginCallbackView.as_view()
+user_password_reset_view = UserPasswordResetView.as_view()
+user_password_reset_confirm_view = UserPasswordResetConfirmView.as_view()

@@ -198,7 +198,7 @@ AUTHENTICATION_BACKENDS = (
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '3/hour',
+        'anon': '6/hour',
     },
 }
 
