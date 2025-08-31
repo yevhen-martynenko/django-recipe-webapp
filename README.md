@@ -17,37 +17,37 @@ A full-stack web application for creating, organizing, and sharing recipes. Buil
 
 #### Recipe Create Page
 
-![Recipe Create Demo](assets/recipe-create.gif)
+![Recipe Create Demo](docs/assets/recipe-create.gif)
 
 #### Password Reset Page
 
-![Password Reset Demo](assets/password-reset.gif)
+![Password Reset Demo](docs/assets/password-reset.gif)
 
 ## Screenshots
 
 #### Login Page
 
-![Login](assets/login.png)
+![Login](docs/assets/login.png)
 
 #### Registration Page
 
-![Register](assets/register.png)
+![Register](docs/assets/register.png)
 
 #### Reset Password Page
 
-![Reset Password](assets/reset-password.png)
+![Reset Password](docs/assets/reset-password.png)
 
 #### Coming Soon Page
 
-![Coming Soon](assets/coming-soon.png)
+![Coming Soon](docs/assets/coming-soon.png)
 
 #### Feedback Page
 
-![Feedback](assets/feedback.png)
+![Feedback](docs/assets/feedback.png)
 
 #### Site Map Page
 
-![Site Map](assets/site-map.png)
+![Site Map](docs/assets/site-map.png)
 
 ## Features
 
