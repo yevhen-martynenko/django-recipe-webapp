@@ -1,0 +1,217 @@
+@use "../main.scss" as *;
+@use "../base/variables.scss" as *;
+@use "../base/mixins.scss" as *;
+
+
+.auth {
+  display: flex;
+  min-height: 100vh;
+  font-family: $font-body;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+
+  // ----------------------------------------------
+  // Visual
+  // ----------------------------------------------
+  &__visual {
+    position: relative;
+    flex: 1;
+    min-height: 100vh;
+
+    background-image: url("@images/auth-visual.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 2rem;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.35);
+      z-index: 1;
+    }
+
+    .auth__brand {
+      position: relative;
+      z-index: 2;
+    }
+
+    .auth__logo {
+      font-size: 2rem;
+      font-family: $font-heading;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  // ----------------------------------------------
+  // Tabs
+  // ----------------------------------------------
+  &__form-panel {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition: all 0.25s ease;
+    z-index: 1;
+
+    &--hidden {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(1rem);
+      pointer-events: none;
+      transition: all 0.25s ease, display 0s 0.4s;
+    }
+  }
+
+  &__title {
+    font-size: 1.8rem;
+    font-family: $font-heading;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &__subtitle {
+    font-size: 1rem;
+    font-family: $font-heading;
+    color: $color-muted;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 2rem 0;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1.5px;
+      background-color: $color-border;
+    }
+
+    &-text {
+      margin: 0 1rem;
+      color: $color-muted;
+      font-size: 1rem;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    margin-bottom: 2rem;
+
+    .auth__tab {
+      flex: 1;
+      text-align: center;
+      padding: 1rem;
+      font-weight: bold;
+      font-family: $font-heading;
+      border: none;
+      background: none;
+      cursor: pointer;
+      transition: $transition;
+      letter-spacing: 0.25rem;
+      border-bottom: 3px solid transparent;
+
+      &--active {
+        color: $color-primary;
+        border-bottom: 3px solid $color-primary;
+      }
+
+      &:not(.auth__tab--active):hover {
+        background-color: $color-accent;
+      }
+    }
+  }
+
+  // ----------------------------------------------
+  // Form
+  // ----------------------------------------------
+  &__form {
+    display: flex;
+    flex-direction: column;
+
+    &-label {
+      margin-bottom: 0.25rem;
+    }
+
+    &-input {
+      margin-bottom: 0.75rem;
+    }
+
+    &-options {
+      margin: 1rem 0 2rem 0;
+    }
+
+    &-link {
+    }
+  }
+  
+  // ----------------------------------------------
+  // Google Button
+  // ----------------------------------------------
+  &__google-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: $color-white;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: $transition;
+
+    &:hover {
+      background-color: $color-accent;
+    }
+
+    .auth__google-icon {
+      display: inline-block;
+      width: 1.25rem;
+      height: 1.25rem;
+      background-image: url('@images/icons/google-icon.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+  }
+
+  // ----------------------------------------------
+  // Panel
+  // ----------------------------------------------
+  &__panel {
+    flex: 1;
+    padding: 3rem 4rem;
+    display: flex;
+    align-items: center;
+    background-color: $color-white;
+    position: relative;
+
+    &-inner {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin: auto;
+      min-height: 400px;
+    }
+  }
+}

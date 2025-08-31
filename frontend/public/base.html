@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title><%= htmlWebpackPlugin.options.title %></title>
-    </head>
-    <body>
-        <!-- BODY -->
-    </body>
+{% load asset_tags %}
+
+<head>
+    <title>{% block title %}TODO: Site{% endblock title %}</title>
+    <link rel="icon" href="{% asset_tags 'favicon.ico' %}">
+    {% include "partials/head.html" %}
+    {% block page_styles %}{% endblock page_styles %}
+</head>
+
+<body>
+    {% if is_partials %}
+        {% include "partials/header.html" %}
+    {% endif %}
+
+    {% include "partials/messages.html" %}
+
+    {% block content %}{% endblock content %}
+
+    {% if is_partials %}
+        {% include "partials/footer.html" %}
+    {% endif %}
+
+    <script defer src="{% asset_tags 'main.js' %}"></script>
+    <script defer src="{% asset_tags 'runtime.js' %}"></script>
+    <script defer src="{% asset_tags 'defaultVendors-src_styles_main_scss.bundle.js' %}"></script>
+    {% block page_scripts %}{% endblock page_scripts %}
+</body>
+
 </html>

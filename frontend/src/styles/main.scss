@@ -1,1 +1,23 @@
 @use "base/reset.scss" as *;
+@use "base/variables.scss" as *;
+@use "base/mixins.scss" as *;
+@use "base/typography.scss" as *;
+@use "base/globals.scss" as *;
+
+@use "layout/messages.scss" as *;
+
+body {
+  margin: 0;
+  color: $color-text;
+  background-color: $color-white;
+  line-height: 1.6;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,46 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% asset_tags 'site_map.css' %}">
+{% endblock page_styles %}
+
+
+{% block content %}
+<div class="container">
+    <main class="sitemap">
+        <header class="header">
+            <h1 class="header__title">Site Map</h1>
+            <p class="header__subtitle">Navigate through all available pages</p>
+        </header>
+        
+        <div class="sitemap-grid">
+            {% for section_name, section_data in urls.items %}
+            <section class="sitemap__section">
+                <h2 class="sitemap__section-title">{{ section_name }}</h2>
+                
+                <ul class="sitemap__list">
+                    {% for page_name, page_url in section_data.urls.items %}
+                    <li class="sitemap__item">
+                        <a href="{{ page_url }}" class="sitemap__link">
+                            <span class="sitemap__link-text">{{ page_name }}</span>
+                            <span class="sitemap__badge sitemap__badge--{{ section_data.badge }}">
+                                {{ section_name }}
+                            </span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'site_map.js' %}"></script>
+{% endblock page_scripts %}

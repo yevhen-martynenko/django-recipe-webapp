@@ -1,0 +1,145 @@
+@use "../main.scss" as *;
+@use "../base/variables.scss" as *;
+@use "../base/mixins.scss" as *;
+
+
+.coming-soon {
+  @include flex-center(column);
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8); /* darkness level */
+    z-index: 1;
+  }
+
+  &__container {
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    z-index: 2;
+  }
+
+  &__title {
+    font-size: 1.8rem;
+    font-family: $font-heading;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: $color-secondary;
+
+    @media (min-width: $breakpoint-md) {
+      font-size: 2.5rem;
+    }
+  }
+
+  &__subtitle {
+    font-size: 1rem;
+    color: $color-secondary;
+    margin-bottom: 2rem;
+
+    @media (min-width: $breakpoint-md) {
+      font-size: 1.125rem;
+    }
+  }
+
+
+  // ----------------------------------------------
+  // Countdown
+  // ----------------------------------------------
+  &__countdown {
+    @include flex-center(row);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+
+    & > .coming-soon__time {
+      background-color: $color-white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      min-width: 70px;
+
+      .coming-soon__number {
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: block;
+        color: $color-text;
+      }
+
+      .coming-soon__label {
+        font-size: 0.875rem;
+        color: $color-muted;
+      }
+    }
+  }
+
+  
+  // ----------------------------------------------
+  // Form
+  // ----------------------------------------------
+  &__form {
+    @include flex-center(row);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+
+    &-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      border: 0;
+    }
+
+    &-input {
+      width: 100%;
+    }
+
+    &-btn {
+      width: 100%;
+    }
+  }
+
+
+  // ----------------------------------------------
+  // Social
+  // ----------------------------------------------
+  &__social {
+    &-list {
+      @include flex-center(row);
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    &-link {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+    }
+
+    &-icon {
+      width: 100%;
+      height: 100%;
+      fill: $color-white;
+      object-fit: contain;
+      transition: $transition;
+
+      &:hover {
+        fill: $color-primary;
+      }
+    }
+  }
+}

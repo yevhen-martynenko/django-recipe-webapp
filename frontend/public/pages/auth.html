@@ -1,0 +1,108 @@
+{% extends "../base.html" %}
+{% load asset_tags %}
+
+
+{% block title %}{{ title }}{% endblock title %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% asset_tags 'auth.css' %}">
+{% endblock page_styles %}
+
+
+{% block content %}
+<main class="auth">
+  <section class="auth__visual">
+    <header class="auth__brand">
+      <h1 class="auth__logo">testbite-a3f9</h1>
+    </header>
+  </section>
+
+  <section class="auth__panel" aria-labelledby="auth-tabs">
+    <div class="auth__panel-inner">
+
+      <!-- Tabs: Login / Sign Up -->
+      <div class="auth__tabs" role="tablist" aria-label="Authentication Tabs" id="auth-tabs">
+        <button id="tab-login" class="auth__tab auth__tab--active" role="tab" aria-selected="true" aria-controls="panel-login">Login</button>
+        <button id="tab-signup" class="auth__tab" role="tab" aria-selected="false" aria-controls="panel-signup">Sign Up</button>
+      </div>
+
+      <!-- Login Panel -->
+      <div id="panel-login" class="auth__form-panel" role="tabpanel" aria-labelledby="tab-login">
+        <h2 class="auth__title">Welcome Back</h2>
+        <p class="auth__subtitle">Log in to access your favorite recipes</p>
+
+        <button class="auth__google-btn" aria-label="Continue with Google">
+          <span class="auth__google-icon"></span>
+          Continue with Google
+        </button>
+
+        <div class="auth__divider" role="separator" aria-hidden="true">
+          <span class="auth__divider-text">Or continue with</span>
+        </div>
+
+        <form class="form auth__form" id="login-form">
+          {% csrf_token %}
+          <label for="login-email" class="form__label auth__form-label">Email address or username</label>
+          <input type="text" id="login-email" class="form__field auth__form-input" name="email" required />
+
+          <label for="login-password" class="form__label auth__form-label">Password</label>
+          <input type="password" id="login-password" class="form__field auth__form-input" name="password" required />
+
+          <div class="form__options auth__form-options">
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input" name="remember">
+              <span class="checkbox__visual"></span>
+              <span class="checkbox__label">Remember me</span>
+            </label>
+            <a href="/auth/password-reset" class="form__link auth__form-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn">Log In</button>
+        </form>
+      </div>
+
+      <!-- Sign Up Panel -->
+      <div id="panel-signup" class="auth__form-panel auth__form-panel--hidden" role="tabpanel" aria-labelledby="tab-signup" style="display: none;">
+        <h2 class="auth__title">Create your account</h2>
+        <p class="auth__subtitle">Sign up to discover, share, and save your favorite recipes</p>
+
+        <button class="auth__google-btn" aria-label="Continue with Google">
+          <span class="auth__google-icon"></span>
+          Continue with Google
+        </button>
+
+        <div class="auth__divider" role="separator" aria-hidden="true">
+          <span class="auth__divider-text">Or continue with</span>
+        </div>
+
+        <form class="form auth__form" id="signup-form">
+          {% csrf_token %}
+          <label for="signup-email" class="form__label auth__form-label">Email address</label>
+          <input type="email" id="signup-email" class="form__field auth__form-input" name="email" required />
+
+          <label for="signup-username" class="form__label auth__form-label optional">Username</label>
+          <input type="text" id="signup-username" class="form__field auth__form-input" name="username" />
+
+          <label for="signup-password" class="form__label auth__form-label">Password</label>
+          <input type="password" id="signup-password" class="form__field auth__form-input" name="password" required />
+
+          <div class="form__options auth__form-options">
+            <label class="checkbox">
+              <input type="checkbox" class="checkbox__input" name="remember">
+              <span class="checkbox__visual"></span>
+              <span class="checkbox__label">Remember me</span>
+            </label>
+            <a href="/auth/password-reset" class="form__link auth__form-link">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn" id="signup-button">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock content %}
+
+
+{% block page_scripts %}
+<script defer src="{% asset_tags 'auth.js' %}"></script>
+{% endblock page_scripts %}

@@ -1,0 +1,15 @@
+# prod
+Django
+django-environ
+djangorestframework
+django-allauth
+django-filter
+jwt
+django-manifest-loader
+Pillow
+django-cors-headers
+
+# dev
+requests
+pytest
+pytest-django
